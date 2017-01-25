@@ -1,0 +1,6 @@
+[package]
+name = "rustle-my-net"
+version = "0.1.0"
+authors = ["Tom Schneider <toschneider@uos.de>"]
+
+[dependencies]
