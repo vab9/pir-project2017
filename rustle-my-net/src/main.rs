@@ -1,13 +1,8 @@
 mod input;
-mod models;
+mod structs;
 use input::read;
-use models::Flower;
-use std::path::Path;
+use std::env;
 fn main() {
-    let filename = Path::new("/home/tom/pir-project2017/rustle-my-net/data/iris_flowers.txt");
-    let flowers = match read(&filename) {
-        Ok(val)  => val,
-        Err(e) => panic!("reading file {} failed. Error {:?}",filename.display(), e),
-    };
-    println!("flower: {}",flowers[150]);
+    let path = env::current_dir().unwrap();
+    let filename = path.join("data/iris_flowers.txt");
 }
