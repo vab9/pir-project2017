@@ -21,11 +21,18 @@ fn main() {
         .get_matches();
 
     let data: String = matches.value_of("data").unwrap().parse().unwrap();
-    let config: String = matches.value_of("config").unwrap().parse().unwrap();
+    //let config: String = matches.value_of("config").unwrap().parse().unwrap();
     if matches.subcommand_name().is_none() {
         println!("Provide at least one subcommand: learn or classify");
         return;
     }
     let path = env::current_dir().unwrap();
     let filename = path.join(data);
+    let input = match read(&filename) {
+        Ok(s) => s,
+        Err(e) => panic!("paniced at read input:   {:?}",e)
+    };
+    for i in input {
+        println!("{}",i);
+    }
 }

@@ -1,7 +1,15 @@
 use std::fmt;
+
+#[derive(Debug)]
+pub enum FlowerName {
+    IrisSetosa,
+    IrisVersicolor,
+    IrisVirginica,
+}
+
 #[derive(Debug)]
 pub struct Flower {
-    name: String,
+    name: FlowerName,
     sepal_length: f32,
     sepal_width: f32,
     petal_length: f32,
@@ -9,7 +17,7 @@ pub struct Flower {
 }
 
 impl Flower {
-    pub fn new(n: String, sl: f32, sw: f32, pl: f32, pw: f32) -> Flower {
+    pub fn new(n: FlowerName, sl: f32, sw: f32, pl: f32, pw: f32) -> Flower {
         Flower { name: n,
                  sepal_length: sl,
                  sepal_width: sw,
@@ -20,7 +28,7 @@ impl Flower {
 }
 impl fmt::Display for Flower {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "({}, {}, {}, {}, {})", self.name, self.sepal_length,
+        write!(f, "({:?}, {}, {}, {}, {})", self.name, self.sepal_length,
                self.sepal_width, self.petal_length, self.petal_width)
     }
 }
