@@ -16,5 +16,5 @@ fn main() {
     for i in input {
         println!("{}",i);
     }
-    println!("{:?}", config);
+    println!("{:?} {:?}", config, subcom);
 }
