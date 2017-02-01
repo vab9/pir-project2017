@@ -4,3 +4,5 @@ version = "0.1.0"
 authors = ["Tom Schneider <toschneider@uos.de>"]
 
 [dependencies]
+rand = "0.3"
+blas = "0.15"

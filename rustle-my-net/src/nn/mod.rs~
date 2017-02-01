@@ -1,0 +1,21 @@
+pub struct Network {
+    layers: Vec<u8>,
+    weights: Vec<Matrix>,
+    biases: Vec<Vector>,
+}
+
+impl Network {
+    fn new(sizes: Vec<u8>) {
+        use rand::distributions::{Normal, IndependentSample};
+
+        let weights: Vec<Matrix> = Vec::with_capacity(sizes.len()-1);
+        let biases: Vec<Vector> = Vec::with_capacity(sizes.len()-1);
+
+        for i in 1..sizes.len() {
+
+
+
+        let normal = Normal::new(0, 1);
+        let v = normal.ind_sample(&mut rand::thread_rng());
+    }
+}
