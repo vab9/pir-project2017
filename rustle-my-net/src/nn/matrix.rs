@@ -1,50 +1,44 @@
 use blas::c::Layout;
 use rand::distributions::normal::Normal;
-use rand::Rng;
+use rand;
+use rand::distributions::IndependentSample;
 
-const layout: Layout = Layout::RowMajor;
+const LAYOUT: Layout = Layout::RowMajor;
 
+/// Note: The length of the rows should be equivalent to
+/// the number of neurons in the previous layer.
 pub struct Matrix {
     rows: u16,
     columns: u16,
-    entries: [f32],
+    entries: Vec<f32>,
     layout: Layout,
 }
 
 impl Matrix {
-    /*pub fn new(rows: u16, columns: u16) -> Self {
-        Matrix {
-            rows: rows,
-            columns: columns,
-            entires: [f32: rows*columns],
-            layout: layout,
-        }
-    }*/
-
     pub fn random_new(rows: u16, columns: u16) -> Self {
         let mut rng = rand::thread_rng();
-        let normal = Normal::new(0,1);
-        let arr = [f32; rows*columns];
-        for elem in arr.iter() {
-            elem = normal.ind_sample(&rng) as f32;
+        let normal = Normal::new(0.0, 1.0);
+        let mut entries = Vec::with_capacity((rows*columns) as usize);
+        for _ in 0..entries.len() {
+            entries.push(normal.ind_sample(&mut rng) as f32);
         }
         Matrix {
             rows: rows,
             columns: columns,
-            entires: arr,
-            layout: layout,
+            entries: entries,
+            layout: LAYOUT,
         }
     }
 
     pub fn as_slice(&self) -> &[f32] {
-        &entries
+        &self.entries
     }
 
     pub fn as_mut_slice(&mut self) -> &mut[f32] {
-        &mut entries
+        &mut self.entries
     }
 
-    pub fn layout(&self) -> Layout {
-        layout
+    pub fn layout(&self) -> &Layout {
+        &self.layout
     }
 }
