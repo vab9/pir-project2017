@@ -27,7 +27,7 @@ current_sheet=$()
 echo ""
 echo "=== Aktuelles Aufgabenblatt ist in Ordner $current_sheet"
 
-manifest="rustle-my-net/Cargo.toml"
+manifest="Cargo.toml"
 if [ -e "$manifest" ]; then
     echo "=== Cargo-Manifest gefunden in '$manifest' -> Cargo-Modus"
     cargo test --manifest-path "$manifest"
