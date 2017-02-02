@@ -1,5 +1,9 @@
+extern crate rand;
+extern crate blas;
+
 mod input;
 mod structs;
+mod nn;
 
 use input::{read, commands};
 use std::env;
@@ -26,4 +30,6 @@ fn main() {
     }
 
     println!("{:?} {:?}", config, subcom);
+
+    let nn = nn::Network::new(vec![4, 20, 3]);
 }
