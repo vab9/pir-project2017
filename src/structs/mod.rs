@@ -1,6 +1,5 @@
 use std::fmt;
-extern crate nalgebra as na;
-use self::na::DVector;
+use na::DVector;
 
 /// enum flower names
 #[derive(Debug, Clone, Copy)]
