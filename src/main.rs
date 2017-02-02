@@ -1,5 +1,5 @@
 extern crate rand;
-extern crate blas;
+extern crate nalgebra;
 
 mod input;
 mod structs;
@@ -31,5 +31,12 @@ fn main() {
 
     println!("{:?} {:?}", config, subcom);
 
-    let nn = nn::Network::new(vec![4, 20, 3]);
+    // just dummy nn for no warnings
+    let nn = nn::Network::new(vec![4, 20, 3]).unwrap();
+
+    // dummy print for no warnings
+    println!("{} {} {}",
+             nn.get_layers().len(),
+             nn.get_weights().len(),
+             nn.get_biases().len());
 }
