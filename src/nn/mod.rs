@@ -29,9 +29,9 @@ pub struct Network {
     /// and the last entry corresponds to the outputlayer.
     layers: Vec<u8>,
     /// a Vec that contains the weights of the respective layer
-    weights: Vec<DMatrix<f64>>,
+    weights: Vec<DMatrix<f32>>,
     /// a Vec cointaining the biases of the respective layer
-    biases: Vec<DMatrix<f64>>,
+    biases: Vec<DMatrix<f32>>,
 }
 
 
@@ -44,8 +44,8 @@ impl Network {
 
         // Store the weights and biases in lists
         // We will not need weights or biases for input layer, so ignore that (hence -1)
-        let mut weights: Vec<DMatrix<f64>> = Vec::with_capacity(sizes.len() - 1);
-        let mut biases: Vec<DMatrix<f64>> = Vec::with_capacity(sizes.len() - 1);
+        let mut weights: Vec<DMatrix<f32>> = Vec::with_capacity(sizes.len() - 1);
+        let mut biases: Vec<DMatrix<f32>> = Vec::with_capacity(sizes.len() - 1);
 
         let mut rng = rand::thread_rng();
 
@@ -54,13 +54,13 @@ impl Network {
             // initialize weight matrices
             weights.push(DMatrix::from_fn(sizes[i - 1] as usize, *layer as usize, |_, _| {
                 let StandardNormal(x) = rng.gen();
-                x
+                x as f32
             }));
 
             // initialize biases
             biases.push(DMatrix::from_fn(*layer as usize, 1, |_, _| {
                 let StandardNormal(x) = rng.gen();
-                x
+                x as f32
             }));
         }
 
@@ -77,12 +77,12 @@ impl Network {
     }
 
     /// return a vector of the weight matrices of the ANN
-    pub fn get_weights(&self) -> &Vec<DMatrix<f64>> {
+    pub fn get_weights(&self) -> &Vec<DMatrix<f32>> {
         &self.weights
     }
 
     /// return a vector of the bias matrices of the ANN
-    pub fn get_biases(&self) -> &Vec<DMatrix<f64>> {
+    pub fn get_biases(&self) -> &Vec<DMatrix<f32>> {
         &self.biases
     }
 }
