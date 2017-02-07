@@ -1,7 +1,7 @@
 use rand;
 use rand::Rng;
 use rand::distributions::normal::StandardNormal;
-use nalgebra::{DMatrix,DVector, IterableMut};
+use nalgebra::{DMatrix, DVector, IterableMut};
 
 /// Artificial Neural Network
 ///
@@ -72,10 +72,9 @@ impl Network {
     }
 
     /// Feed input through network, return output layer activation level
-    pub fn feedforward(&self, mut a:  DVector<f32>) -> DVector<f32> {
-        for (weight, bias) in self.weights.iter().zip(self.biases.iter()) {
-            // TODO: get rid of ugly clone
-            a = sigmoid(weight * a + bias.clone());
+    pub fn feedforward(&self, mut a: DVector<f32>) -> DVector<f32> {
+        for (weight, bias) in self.weights.iter().zip(self.biases.clone().into_iter()) {
+            a = sigmoid(weight * a + bias);
         }
         a
     }
@@ -100,7 +99,7 @@ impl Network {
 fn sigmoid(arr: DVector<f32>) -> DVector<f32> {
     let mut sig = arr.clone();
     for elem in sig.iter_mut() {
-        *elem = 1.0/(1.0+(elem).exp());
+        *elem = 1.0 / (1.0 + (elem).exp());
     }
     sig
 }
