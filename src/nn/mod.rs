@@ -1,7 +1,7 @@
 use rand;
 use rand::Rng;
 use rand::distributions::normal::StandardNormal;
-use nalgebra::DMatrix;
+use nalgebra::{DMatrix, DVector, IterableMut};
 
 /// Artificial Neural Network
 ///
@@ -31,7 +31,7 @@ pub struct Network {
     /// a Vec that contains the weights of the respective layer
     weights: Vec<DMatrix<f32>>,
     /// a Vec cointaining the biases of the respective layer
-    biases: Vec<DMatrix<f32>>,
+    biases: Vec<DVector<f32>>,
 }
 
 
@@ -45,20 +45,20 @@ impl Network {
         // Store the weights and biases in lists
         // We will not need weights or biases for input layer, so ignore that (hence -1)
         let mut weights: Vec<DMatrix<f32>> = Vec::with_capacity(sizes.len() - 1);
-        let mut biases: Vec<DMatrix<f32>> = Vec::with_capacity(sizes.len() - 1);
+        let mut biases: Vec<DVector<f32>> = Vec::with_capacity(sizes.len() - 1);
 
         let mut rng = rand::thread_rng();
 
         // we use the standard normal distribution to initialize weights and biases - why?
         for (i, layer) in sizes.iter().enumerate().skip(1) {
             // initialize weight matrices
-            weights.push(DMatrix::from_fn(sizes[i - 1] as usize, *layer as usize, |_, _| {
+            weights.push(DMatrix::from_fn(*layer as usize, sizes[i - 1] as usize, |_, _| {
                 let StandardNormal(x) = rng.gen();
                 x as f32
             }));
 
             // initialize biases
-            biases.push(DMatrix::from_fn(*layer as usize, 1, |_, _| {
+            biases.push(DVector::from_fn(*layer as usize, |_| {
                 let StandardNormal(x) = rng.gen();
                 x as f32
             }));
@@ -69,6 +69,14 @@ impl Network {
             weights: weights,
             biases: biases,
         })
+    }
+
+    /// Feed input through network, return output layer activation level
+    pub fn feedforward(&self, mut a: DVector<f32>) -> DVector<f32> {
+        for (weight, bias) in self.weights.iter().zip(self.biases.clone().into_iter()) {
+            a = sigmoid(weight * a + bias);
+        }
+        a
     }
 
     /// return the layers used to initialize the ANN
@@ -82,7 +90,27 @@ impl Network {
     }
 
     /// return a vector of the bias matrices of the ANN
-    pub fn get_biases(&self) -> &Vec<DMatrix<f32>> {
+    pub fn get_biases(&self) -> &Vec<DVector<f32>> {
         &self.biases
     }
+}
+
+// calculate elementwise sigmoid function
+fn sigmoid(arr: DVector<f32>) -> DVector<f32> {
+    let mut sig = arr.clone();
+    for elem in sig.iter_mut() {
+        *elem = 1.0 / (1.0 + (elem).exp());
+    }
+    sig
+}
+
+
+#[test]
+fn test_sigmoid() {
+    let mut arr_orig = DVector::from_element(3, 1.0f32);
+    arr_orig[2] = 2.4137;
+    let arr = sigmoid(arr_orig);
+    assert_eq!(arr[0], arr[1]);
+    assert_eq!(arr[0], 0.26894142137f32);
+    assert_eq!(0.082133951f32, arr[2]);
 }

@@ -39,4 +39,9 @@ fn main() {
              nn.get_layers().len(),
              nn.get_weights().len(),
              nn.get_biases().len());
+
+
+    println!("FF: {:?}",
+             nn.feedforward(nalgebra::DVector::from_element(nn.get_layers()[0] as usize, 0 as f32))
+             );
 }
