@@ -104,3 +104,14 @@ fn sigmoid(arr: DVector<f32>) -> DVector<f32> {
     }
     sig
 }
+
+
+#[test]
+fn test_sigmoid() {
+    let mut arr_orig = DVector::from_element(3, 1.0f32);
+    arr_orig[2] = 2.4137;
+    let arr = sigmoid(arr_orig);
+    assert_eq!(arr[0], arr[1]);
+    assert_eq!(arr[0], 0.26894142137f32);
+    assert_eq!(0.082133951f32, arr[2]);
+}
