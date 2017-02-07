@@ -52,7 +52,7 @@ impl Network {
         // we use the standard normal distribution to initialize weights and biases - why?
         for (i, layer) in sizes.iter().enumerate().skip(1) {
             // initialize weight matrices
-            weights.push(DMatrix::from_fn(sizes[i - 1] as usize, *layer as usize, |_, _| {
+            weights.push(DMatrix::from_fn(*layer as usize, sizes[i - 1] as usize, |_, _| {
                 let StandardNormal(x) = rng.gen();
                 x as f32
             }));
@@ -71,7 +71,14 @@ impl Network {
         })
     }
 
-
+    /// Feed input through network, return output layer activation level
+    pub fn feedforward(&self, mut a:  DVector<f32>) -> DVector<f32> {
+        for (weight, bias) in self.weights.iter().zip(self.biases.iter()) {
+            // TODO: get rid of ugly clone
+            a = sigmoid(weight * a + bias.clone());
+        }
+        a
+    }
 
     /// return the layers used to initialize the ANN
     pub fn get_layers(&self) -> &Vec<u8> {
@@ -89,9 +96,8 @@ impl Network {
     }
 }
 
-
-fn sigmoid(arr: &DVector<f32>) -> DVector<f32> {
-    //might be better to do this on an activation vector held by the nn itself
+// calculate elementwise sigmoid function
+fn sigmoid(arr: DVector<f32>) -> DVector<f32> {
     let mut sig = arr.clone();
     for elem in sig.iter_mut() {
         *elem = 1.0/(1.0+(elem).exp());
