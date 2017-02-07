@@ -7,7 +7,8 @@ mod nn;
 
 use input::{read, commands};
 use std::env;
-
+extern crate nalgebra as na;
+use self::na::DVector;
 
 fn main() {
 
@@ -24,12 +25,10 @@ fn main() {
         Err(e) => panic!("paniced at read input:   {:?}", e),
     };
 
-    // prints the inputfile
-    for i in input {
-        println!("{}", i);
-    }
-
     println!("{:?} {:?}", config, subcom);
+
+    let m = DVector::from(input[0]);
+    println!("{:?}",m);
 
     // just dummy nn for no warnings
     let nn = nn::Network::new(vec![4, 20, 3]).unwrap();

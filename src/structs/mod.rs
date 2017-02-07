@@ -1,8 +1,8 @@
 use std::fmt;
-
+use na::DVector;
 
 /// enum flower names
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum FlowerName {
     IrisSetosa,
     IrisVersicolor,
@@ -10,7 +10,7 @@ pub enum FlowerName {
 }
 
 /// flowertype that contains the 4 inputs and the Flowername
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Flower {
     name: FlowerName,
     sepal_length: f32,
@@ -42,5 +42,15 @@ impl fmt::Display for Flower {
                self.sepal_width,
                self.petal_length,
                self.petal_width)
+    }
+}
+
+impl From <Flower> for DVector<f32> {
+    fn from(fl: Flower) -> DVector<f32> {
+
+        DVector::from_slice(4,&[fl.sepal_length,
+                                fl.sepal_width,
+                                fl.petal_length,
+                                fl.petal_width])
     }
 }
