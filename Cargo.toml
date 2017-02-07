@@ -6,3 +6,4 @@ authors = ["Tom Schneider <toschneider@uos.de>"]
 [dependencies]
 clap = "2.20.0"
 nalgebra = "0.10.1"
+rand = "0.3"
