@@ -8,7 +8,6 @@ mod nn;
 use input::{read, commands};
 use std::env;
 extern crate nalgebra as na;
-use self::na::DVector;
 
 fn main() {
 
@@ -27,8 +26,8 @@ fn main() {
 
     println!("{:?} {:?}", config, subcom);
 
-    let m = DVector::from(input[0]);
-    println!("{:?}",m);
+    let m = structs::Data::from_flower(input[0]);
+    println!("{:?}", m.get_input());
 
     // just dummy nn for no warnings
     let nn = nn::Network::new(vec![4, 20, 3]).unwrap();
@@ -41,6 +40,6 @@ fn main() {
 
 
     println!("FF: {:?}",
-             nn.feedforward(nalgebra::DVector::from_element(nn.get_layers()[0] as usize, 0 as f32))
-             );
+             nn.feedforward(nalgebra::DVector::from_element(nn.get_layers()[0] as usize,
+                                                            0 as f32)));
 }
