@@ -27,7 +27,7 @@ fn main() {
     println!("{:?} {:?}", config, subcom);
 
     let m = structs::Data::from_flower(input[0]);
-    println!("{:?}", m.get_input());
+    println!("{:?} {}", m.get_input(), m.get_classifier());
 
     // just dummy nn for no warnings
     let nn = nn::Network::new(vec![4, 20, 3]).unwrap();

@@ -2,7 +2,7 @@ use std::fmt;
 use na::DVector;
 
 
-/// Struct for using data
+/// Struct for u8
 pub struct Data {
     /// classifier for the NN (Result)
     classifier: u8,
@@ -26,13 +26,13 @@ impl Data {
     }
 
     /// getter for the Input
-    pub fn get_input(self) -> DVector<f32> {
-        self.input
+    pub fn get_input(&self) -> &DVector<f32> {
+        &self.input
     }
 
     /// getter for the classifier
-    pub fn get_classifier(self) -> u8 {
-        self.classifier
+    pub fn get_classifier(&self) -> &u8 {
+        &self.classifier
     }
 }
 
