@@ -1,10 +1,16 @@
+extern crate clap;
+
 use structs::{Flower, FlowerName};
 use std::io::{BufReader, BufRead, Result};
 use std::fs::File;
 use std::path::Path;
-extern crate clap;
 use self::clap::{Arg, App, SubCommand};
 use std::io::{Error, ErrorKind};
+use std::fs;
+use std::env;
+
+
+
 
 /// reads content of given file and returns a result with
 /// either the Vector of Flowers or Err
@@ -88,4 +94,23 @@ pub fn commands() -> (String, String, String) {
     (matches.value_of("data").unwrap().parse().unwrap(),
      matches.value_of("config").unwrap().parse().unwrap(),
      matches.subcommand_name().unwrap().to_string())
+}
+
+pub fn check_logs(max_files: u8) {
+    let path = env::current_dir().unwrap().join("logs");
+
+    let paths = fs::read_dir(&Path::new(&path)).unwrap();
+
+    let names = paths.filter_map(|entry| {
+            entry.ok().and_then(|e| {
+                e.path()
+                    .file_name()
+                    .and_then(|n| n.to_str().map(|s| String::from(s)))
+            })
+        })
+        .collect::<Vec<String>>();
+
+    if names.len() > max_files as usize {
+        println!("{:?}", names);
+    }
 }
