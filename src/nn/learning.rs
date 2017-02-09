@@ -1,16 +1,23 @@
-pub fn sgd(net: nn::Network, training_data: Vec<Data>, epochs: u8, mini_batch_size: u8, eta: f32) {
+use structs::Data;
+use nn::Network;
+
+pub fn sgd(net: Network, mut training_data: Vec<Data>, epochs: u8, mini_batch_size: u8, eta: f32) {
     use rand;
+    use rand::Rng;
     let mut rng = rand::thread_rng();
 
     for j in 0..epochs {
-        rng.shuffle(training_data);
-        //let mini_batches = training_data.chunks(mini_batch_size);
-        for mini_batch in training_data.chunks(mini_batch_size) {
-            nn.update_mini_batch(mini_batch, eta);
+        rng.shuffle(&mut training_data);
+        for mini_batch in training_data.chunks_mut(mini_batch_size as usize) {
+            update_mini_batch(mini_batch, eta);
         }
         println!("Epoch {} complete!", j);
     }
 
+}
+
+fn update_mini_batch(mini_batch: &[Data], eta: f32) {
+    unimplemented!();
 }
 
 

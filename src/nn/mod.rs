@@ -1,3 +1,5 @@
+mod learning;
+
 use rand;
 use rand::Rng;
 use rand::distributions::normal::StandardNormal;
