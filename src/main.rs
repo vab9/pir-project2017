@@ -7,6 +7,7 @@ mod nn;
 
 use input::{read, commands};
 use std::env;
+use structs::{FlowerName, Classifier};
 extern crate nalgebra as na;
 
 fn main() {
@@ -27,7 +28,9 @@ fn main() {
     println!("{:?} {:?}", config, subcom);
 
     let m = structs::Data::from_flower(input[0]);
-    println!("{:?} {}", m.get_input(), m.get_classifier());
+    println!("{:?} {:?}",
+             m.get_input(),
+             FlowerName::declassify(*m.get_classifier()).unwrap());
 
     // just dummy nn for no warnings
     let nn = nn::Network::new(vec![4, 20, 3]).unwrap();

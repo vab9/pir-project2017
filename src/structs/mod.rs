@@ -1,5 +1,6 @@
 use std::fmt;
 use na::DVector;
+use std::io::{Error, ErrorKind};
 
 
 /// Struct for u8
@@ -38,8 +39,9 @@ impl Data {
 
 
 /// trait that is used to classify an enum into an u8
-trait Classifier {
+pub trait Classifier {
     fn classify(&self) -> u8;
+    fn declassify(num: u8) -> Result<FlowerName, Error>;
 }
 
 
@@ -59,6 +61,15 @@ impl Classifier for FlowerName {
             FlowerName::IrisSetosa => 0,
             FlowerName::IrisVersicolor => 1,
             FlowerName::IrisVirginica => 2,
+        }
+    }
+
+    fn declassify(num: u8) -> Result<FlowerName, Error> {
+        match num {
+            0 => Ok(FlowerName::IrisSetosa),
+            1 => Ok(FlowerName::IrisVersicolor),
+            2 => Ok(FlowerName::IrisVirginica),
+            _ => Err(Error::new(ErrorKind::Other, "Not a f32")),
         }
     }
 }
