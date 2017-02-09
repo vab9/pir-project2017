@@ -91,9 +91,19 @@ impl Network {
         &self.weights
     }
 
+    /// return a mutable vector of the weight matrices of the ANN
+    pub fn get_weights_mut(&mut self) -> &mut Vec<DMatrix<f32>> {
+        &mut self.weights
+    }
+
     /// return a vector of the bias matrices of the ANN
     pub fn get_biases(&self) -> &Vec<DVector<f32>> {
         &self.biases
+    }
+
+    /// return a vector of the bias matrices of the ANN
+    pub fn get_biases_mut(&mut self) -> &mut Vec<DVector<f32>> {
+        &mut self.biases
     }
 }
 
