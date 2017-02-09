@@ -38,7 +38,7 @@ impl Data {
 }
 
 
-/// trait that is used to classify an enum into an u8
+/// trait that is used to classify or declassify
 pub trait Classifier {
     fn classify(&self) -> u8;
     fn declassify(num: u8) -> Result<FlowerName, Error>;
@@ -54,8 +54,10 @@ pub enum FlowerName {
     IrisVirginica,
 }
 
-/// classify FlowerName into an u8
+
 impl Classifier for FlowerName {
+
+    /// classify FlowerName into an u8
     fn classify(&self) -> u8 {
         match *self {
             FlowerName::IrisSetosa => 0,
@@ -64,6 +66,7 @@ impl Classifier for FlowerName {
         }
     }
 
+    /// declassify an u8 into an FlowerName
     fn declassify(num: u8) -> Result<FlowerName, Error> {
         match num {
             0 => Ok(FlowerName::IrisSetosa),
