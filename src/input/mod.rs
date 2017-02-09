@@ -2,7 +2,7 @@ extern crate clap;
 
 use structs::{Flower, FlowerName};
 use std::io::{BufReader, BufRead, Result};
-use std::fs::File;
+use std::fs::{File, remove_file};
 use std::path::Path;
 use self::clap::{Arg, App, SubCommand};
 use std::io::{Error, ErrorKind};
@@ -97,11 +97,11 @@ pub fn commands() -> (String, String, String) {
 }
 
 pub fn check_logs(max_files: u8) {
-    let path = env::current_dir().unwrap().join("logs");
 
+    let path = env::current_dir().unwrap().join("logs");
     let paths = fs::read_dir(&Path::new(&path)).unwrap();
 
-    let names = paths.filter_map(|entry| {
+    let mut names = paths.filter_map(|entry| {
             entry.ok().and_then(|e| {
                 e.path()
                     .file_name()
@@ -110,7 +110,19 @@ pub fn check_logs(max_files: u8) {
         })
         .collect::<Vec<String>>();
 
-    if names.len() > max_files as usize {
-        println!("{:?}", names);
+    while names.len() > max_files as usize {
+
+        let mut index = 0;
+        let oldest = fs::metadata(path.join(&names[0])).unwrap().accessed().unwrap();
+
+        for i in 0..names.len() {
+            let current = fs::metadata(path.join(&names[i])).unwrap().accessed().unwrap();
+            if oldest > current {
+                index = i;
+            }
+        }
+        // unused must use of the result
+        remove_file(path.join(&names[index]));
+        names.remove(index as usize);
     }
 }
