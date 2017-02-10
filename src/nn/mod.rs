@@ -2,6 +2,13 @@ use rand;
 use rand::Rng;
 use rand::distributions::normal::StandardNormal;
 use nalgebra::{DMatrix, DVector, IterableMut};
+use std::str;
+use std::io::{BufReader, BufRead, BufWriter, Write};
+use std::fs::File;
+use std::path::Path;
+use serde_json;
+use serde_derive;
+use serde::Serialize;
 
 /// Artificial Neural Network
 ///
@@ -21,7 +28,7 @@ use nalgebra::{DMatrix, DVector, IterableMut};
 /// // 2 "neurons" in the output layer
 /// let nnet = Network::new(vec![3, 5, 2]);
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Network {
     /// a Vec outlining the topology of the ANN
     /// the first entry corresponds to the inputlayer,
@@ -93,6 +100,7 @@ impl Network {
     pub fn get_biases(&self) -> &Vec<DVector<f32>> {
         &self.biases
     }
+
 }
 
 // calculate elementwise sigmoid function

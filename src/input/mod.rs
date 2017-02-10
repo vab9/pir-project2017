@@ -80,7 +80,7 @@ pub fn commands() -> (String, String, String) {
             .long("config")
             .short("c")
             .takes_value(true)
-            .default_value("data/iris_flowers.txt"))
+            .default_value("data/config.json"))
         .get_matches();
     if matches.subcommand_name().is_none() {
         panic!("Provide at least one subcommand: learn or classify");

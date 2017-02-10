@@ -1,5 +1,9 @@
 extern crate rand;
 extern crate nalgebra;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde;
+extern crate serde_json;
 
 mod input;
 mod structs;
@@ -42,5 +46,5 @@ fn main() {
 
     println!("FF: {:?}",
              nn.feedforward(nalgebra::DVector::from_element(nn.get_layers()[0] as usize, 0 as f32))
-             );
+    );
 }
