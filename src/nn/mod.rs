@@ -76,7 +76,7 @@ impl Network {
     /// Feed input through network, return output layer activation level
     pub fn feedforward(&self, mut a: DVector<f32>) -> DVector<f32> {
         for (weight, bias) in self.weights.iter().zip(self.biases.clone().into_iter()) {
-            a = sigmoid(weight * a + bias);
+            a = sigmoid(&(weight * a + bias));
         }
         a
     }
@@ -108,7 +108,7 @@ impl Network {
 }
 
 // calculate elementwise sigmoid function
-fn sigmoid(arr: DVector<f32>) -> DVector<f32> {
+pub fn sigmoid(arr: &DVector<f32>) -> DVector<f32> {
     let mut sig = arr.clone();
     for elem in sig.iter_mut() {
         *elem = 1.0 / (1.0 + (elem).exp());
