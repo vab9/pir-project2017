@@ -20,6 +20,9 @@ extern crate nalgebra as na;
 
 fn main() {
 
+    // does travis really need output?
+    println!("hey travis");
+
     // init logger
     init_logger();
 
