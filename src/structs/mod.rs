@@ -9,15 +9,20 @@ pub struct Data {
     classifier: u8,
     /// Input Vector for the Inputlayer of the NN
     input: DVector<f32>,
+    //TODO: Completly replace classifier by class vector
+    class_vector: DVector<f32>,
 }
 
 
 impl Data {
     /// Generates a new Data struct with a Vector and an u8(classifier)
     pub fn new(vec: DVector<f32>, clas: u8) -> Data {
+        let mut class_v = DVector::from_element(3, 0.0f32);
+        class_v[clas as usize] = 1.0f32;
         Data {
             classifier: clas,
             input: vec,
+            class_vector: class_v,
         }
     }
 
@@ -34,6 +39,10 @@ impl Data {
     /// getter for the classifier
     pub fn get_classifier(&self) -> &u8 {
         &self.classifier
+    }
+
+    pub fn get_class_vector(&self) -> &DVector<f32> {
+        &self.class_vector
     }
 }
 

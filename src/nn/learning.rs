@@ -37,7 +37,7 @@ fn update_mini_batch(mut nn: &mut Network, mut mini_batch: &mut [Data], eta: f32
     for data in mini_batch {
         let (delta_nabla_b, delta_nabla_w) = backprop(&mut nn,
                                                       data.get_input(),
-                                                      data.get_classifier());
+                                                      data.get_class_vector());
         for (mut nb, dnb) in nabla_b.iter_mut().zip(delta_nabla_b.iter()) {
             // TODO: This is really not good. Someone needs to fix this.
             *nb += dnb.clone();
@@ -59,8 +59,8 @@ fn update_mini_batch(mut nn: &mut Network, mut mini_batch: &mut [Data], eta: f32
 }
 
 
-fn backprop(nn: &mut Network, data: &DVector<f32>, class: &u8) -> (Vec<DVector<f32>>,
-                                                                   Vec<DMatrix<f32>>) {
+fn backprop(nn: &mut Network, data: &DVector<f32>, desired_output: &DVector<f32>)
+            -> (Vec<DVector<f32>>, Vec<DMatrix<f32>>) {
     use nalgebra::{self, dot};
     use nn;
 
@@ -82,7 +82,7 @@ fn backprop(nn: &mut Network, data: &DVector<f32>, class: &u8) -> (Vec<DVector<f
     // still be a performance issue since we call this once per training data.
     let mut activation = data.clone();
 
-    // hold all activation layers (does not include input)
+    // hold all activation layers (including output)
     let mut activations: Vec<DVector<f32>> = Vec::with_capacity(nn.get_layers().len());
     // hold z where z is the input of the sigmoid function for each layer
     let mut zs: Vec<DVector<f32>> = Vec::with_capacity(nn.get_layers().len());
@@ -96,27 +96,47 @@ fn backprop(nn: &mut Network, data: &DVector<f32>, class: &u8) -> (Vec<DVector<f
         activation = nn::sigmoid(&zs[zs.len()-1]);
         activations.push(activation)
     }
+
+    // backward pass
+    let delta = cost_derivative(&activations[activations.len()], desired_output)
+        * sigmoid_prime(&zs[zs.len()-1]);
+    let nabla_b_len = nabla_b.len() -1;
+    let nabla_w_len = nabla_w.len() -1;
+    nabla_b[nabla_b_len] = delta;
+    //let mut act_transp = DMatrix::from_column_iter(
+    //nabla_w[nabla_w_len] = &nabla_b[nabla_b_len] * activations[activations.len()-2]
+
     unimplemented!();
 }
 
+fn transpose_vec(vec: &Vec<DVector<f32>>) -> DMatrix<&f32> {
+    use nalgebra::Iterable;
+    let iter = vec.iter().flat_map(|x| x.iter());
+
+    let mut m = DMatrix::from_column_iter(vec[0].len(), vec.len(), iter);
+    m = m.transpose()
+}
+
+
+
+/// Derivative of the cost function
+fn cost_derivative(output_activations: &DVector<f32>, desired_output: &DVector<f32>)
+                   -> DVector<f32> {
+    // easy, derivative of quadratic cost function is:
+    //TODO: Get rid of clone
+    output_activations.clone()-desired_output.clone()
+}
+
+
+/// Derivative of the sigmoid function
+fn sigmoid_prime(z: &DVector<f32>) -> DVector<f32>{
+    use nn;
+    // Derivative of sigmoid function, ask wolfram alpha if you don't believe me
+    nn::sigmoid(z) * (1.0f32 - nn::sigmoid(z))
+}
 
 /*
-   def backprop(self, x, y):
-        """Return a tuple "(nabla_b, nabla_w)" representing the
-        gradient for the cost function C_x.  "nabla_b" and
-        "nabla_w" are layer-by-layer lists of numpy arrays, similar
-        to "self.biases" and "self.weights"."""
-        nabla_b = [np.zeros(b.shape) for b in self.biases]
-        nabla_w = [np.zeros(w.shape) for w in self.weights]
-        # feedforward
-        activation = x
-        activations = [x] # list to store all the activations, layer by layer
-        zs = [] # list to store all the z vectors, layer by layer
-        for b, w in zip(self.biases, self.weights):
-            z = np.dot(w, activation)+b
-            zs.append(z)
-            activation = sigmoid(z)
-            activations.append(activation)
+
         # backward pass
         delta = self.cost_derivative(activations[-1], y) * \
             sigmoid_prime(zs[-1])
@@ -135,4 +155,23 @@ fn backprop(nn: &mut Network, data: &DVector<f32>, class: &u8) -> (Vec<DVector<f
             nabla_b[-l] = delta
             nabla_w[-l] = np.dot(delta, activations[-l-1].transpose())
         return (nabla_b, nabla_w)
+
+
+
+   def backprop(self, x, y):
+        """Return a tuple "(nabla_b, nabla_w)" representing the
+        gradient for the cost function C_x.  "nabla_b" and
+        "nabla_w" are layer-by-layer lists of numpy arrays, similar
+        to "self.biases" and "self.weights"."""
+        nabla_b = [np.zeros(b.shape) for b in self.biases]
+        nabla_w = [np.zeros(w.shape) for w in self.weights]
+        # feedforward
+        activation = x
+        activations = [x] # list to store all the activations, layer by layer
+        zs = [] # list to store all the z vectors, layer by layer
+        for b, w in zip(self.biases, self.weights):
+            z = np.dot(w, activation)+b
+            zs.append(z)
+            activation = sigmoid(z)
+            activations.append(activation)
 */
