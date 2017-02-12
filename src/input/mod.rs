@@ -1,10 +1,12 @@
+extern crate clap;
+
 use structs::{Flower, FlowerName};
 use std::io::{BufReader, BufRead, Result};
 use std::fs::File;
 use std::path::Path;
-extern crate clap;
 use self::clap::{Arg, App, SubCommand};
 use std::io::{Error, ErrorKind};
+
 
 /// reads content of given file and returns a result with
 /// either the Vector of Flowers or Err

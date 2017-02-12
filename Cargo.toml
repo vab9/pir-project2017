@@ -7,3 +7,6 @@ authors = ["Tom Schneider <toschneider@uos.de>"]
 clap = "2.20.0"
 nalgebra = "0.10.1"
 rand = "0.3"
+fern = "0.3.5"
+log = "0.3.6"
+time = "0.1.36"

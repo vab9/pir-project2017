@@ -1,7 +1,7 @@
 use rand;
 use rand::Rng;
 use rand::distributions::normal::StandardNormal;
-use nalgebra::{DMatrix, DVector, IterableMut};
+use na::{DMatrix, DVector, IterableMut};
 
 /// Artificial Neural Network
 ///
