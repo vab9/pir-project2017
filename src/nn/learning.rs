@@ -6,16 +6,25 @@ use nalgebra::{DVector, DMatrix};
 pub fn sgd(mut nn: &mut Network,
            mut training_data: Vec<Data>,
            epochs: u8, mini_batch_size: u8,
-           eta: f32) {
+           eta: f32, mut test_data: Option<Vec<Data>>) {
     use rand::{ self, Rng};
     let mut rng = rand::thread_rng();
+
+    let test_data_n = match test_data{
+        Some(value) => value.len(),
+        None => 0,
+    };
 
     for j in 0..epochs {
         rng.shuffle(&mut training_data);
         for mut mini_batch in training_data.chunks_mut(mini_batch_size as usize) {
             update_mini_batch(&mut nn, &mut mini_batch, eta);
         }
-        println!("Epoch {} complete!", j);
+        if test_data_n > 0 {
+            println!("Epoch {}: {}/{}", j, evaluate(&nn, test_data.unwrap()), test_data_n);
+        } else {
+            println!("Epoch {} complete!", j);
+        }
     }
 }
 
@@ -135,3 +144,19 @@ fn sigmoid_prime(z: &DVector<f32>) -> DVector<f32>{
     // Derivative of sigmoid function, ask wolfram alpha if you don't believe me
     nn::sigmoid(z) * (1.0f32 - nn::sigmoid(z))
 }
+
+fn evaluate(nn: &Network, &test_data: Vec<Data>) -> u8 {
+    test_results = test_data.iter().flat_map(|x|x.iter()).map(|ref x| nn.feedforward(x)).enumerate().max_by(|&(_, item)| item).collect();
+    unimplemented!();
+        //array.iter().enumerate().max_by(|&(_, item)| item)
+}
+
+/*
+    def evaluate(self, test_data):
+        """Return the number of test inputs for which the neural
+        network outputs the correct result. Note that the neural
+        network's output is assumed to be the index of whichever
+        neuron in the final layer has the highest activation."""
+        test_results = [(np.argmax(self.feedforward(x)), y)
+                        for (x, y) in test_data]
+        return sum(int(x == y) for (x, y) in test_results)*/
