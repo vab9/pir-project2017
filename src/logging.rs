@@ -85,7 +85,6 @@ fn clean_logs() -> Result<usize, io::Error> {
 
     // delete the selected files
     for f in delete_vec {
-        println!("{:?}", f);
         fs::remove_file(&path.join(f))?;
     }
     Ok(excess_files)

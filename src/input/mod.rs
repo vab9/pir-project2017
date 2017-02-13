@@ -1,11 +1,11 @@
 extern crate clap;
 
-use structs::{Flower, FlowerName};
+use structs::Flower;
 use std::io::{self, BufReader, BufRead};
 use std::fs::File;
 use std::path::Path;
+use std::str::FromStr;
 use self::clap::{Arg, App, AppSettings, SubCommand};
-use std::io::{Error, ErrorKind};
 
 
 /// reads content of given file and returns a result with
@@ -15,58 +15,15 @@ pub fn read(filename: &Path) -> io::Result<Vec<Flower>> {
     // Tries to open a file and reads it line for line
     let f = File::open(filename)?;
     let reader = BufReader::new(&f);
-    let mut flowers = Vec::new();
+    let mut flowers: Vec<Flower> = Vec::new();
 
     // goes through every line and parses into a flower if valid
     for line in reader.lines() {
         let l = line?;
-        let content = l.split(',').collect::<Vec<&str>>();
-
-        // matches if its a valid flower
-        match is_flower(&content) {
-            Ok(res) => flowers.push(res),
-            Err(e) => println!("{}", e),
-        }
+        flowers.push(Flower::from_str(&l)?);
     }
     Ok(flowers)
 }
-
-/// parses the String array into the flower type and returns it as
-/// as a io::Result
-fn is_flower(flower: &[&str]) -> io::Result<Flower> {
-
-    // just returns for every value of the flower
-    // or an std::io::Error
-    let name = match flower[4] {
-        "Iris-setosa" => FlowerName::IrisSetosa,
-        "Iris-versicolor" => FlowerName::IrisVersicolor,
-        "Iris-virginica" => FlowerName::IrisVirginica,
-        _ => return Err(Error::new(ErrorKind::Other, "Not a flower")),
-    };
-
-    let sepal_length = match flower[0].parse::<f32>() {
-        Ok(x) => x,
-        _ => return Err(Error::new(ErrorKind::Other, "Not a f32")),
-    };
-
-    let sepal_width = match flower[1].parse::<f32>() {
-        Ok(x) => x,
-        _ => return Err(Error::new(ErrorKind::Other, "Not a f32")),
-    };
-
-    let petal_length = match flower[2].parse::<f32>() {
-        Ok(x) => x,
-        _ => return Err(Error::new(ErrorKind::Other, "Not a f32")),
-    };
-
-    let petal_width = match flower[3].parse::<f32>() {
-        Ok(x) => x,
-        _ => return Err(Error::new(ErrorKind::Other, "Not a f32")),
-    };
-
-    Ok(Flower::new(name, sepal_length, sepal_width, petal_length, petal_width))
-}
-
 
 /// parses commands for the programm and returns a tuple of strings
 pub fn commands() -> (String, String, String) {
