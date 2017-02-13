@@ -59,21 +59,22 @@ fn update_mini_batch(mut nn: &mut Network, mut mini_batch: &mut [Data], eta: f32
 }
 
 
+/// Gets the desired changes in weights and biases for one training example
 fn backprop(nn: &mut Network, data: &DVector<f32>, desired_output: &DVector<f32>)
             -> (Vec<DVector<f32>>, Vec<DMatrix<f32>>) {
-    use nalgebra::{self, Dot};
+    use nalgebra::{self, Dot, Outer};
     //use nalgebra::Dot;
     use nn;
 
     // holds all biases of the network
     let mut nabla_b: Vec<DVector<f32>> = Vec::with_capacity(nn.get_biases().len());
     for biases in nn.get_biases() {
-        nabla_b.push(DVector::from_element(biases.len(), 0.0f32));
+        nabla_b.push(DVector::new_zeros(biases.len()));
     }
     // holds all weights of the network
     let mut nabla_w: Vec<DMatrix<f32>> = Vec::with_capacity(nn.get_weights().len());
     for weights in nn.get_weights() {
-        nabla_w.push(DMatrix::from_element(weights.nrows(), weights.ncols(), 0.0f32));
+        nabla_w.push(DMatrix::new_zeros(weights.nrows(), weights.ncols()));
     }
 
     // feedforward
@@ -99,68 +100,25 @@ fn backprop(nn: &mut Network, data: &DVector<f32>, desired_output: &DVector<f32>
     }
 
     // backward pass
-    let delta = cost_derivative(&activations[activations.len()], desired_output)
+    let mut delta = cost_derivative(&activations[activations.len()], desired_output)
         * sigmoid_prime(&zs[zs.len()-1]);
     let nabla_b_len = nabla_b.len() -1;
     let nabla_w_len = nabla_w.len() -1;
-    nabla_b[nabla_b_len] = delta;
-    //let mut act_transp = DMatrix::from_column_iter(
-    nabla_w[nabla_w_len] = (&nabla_b[nabla_b_len]).clone().dot(&activations[activations.len()-2]).clone();
+    // TODO: Remove clone
+    nabla_b[nabla_b_len] = delta.clone();
+    nabla_w[nabla_w_len] = (&nabla_b[nabla_b_len]).outer(&activations[activations.len()-2]);
 
-    unimplemented!();
+    //TODO: Verify if we need to iterate only to ...len()-1 because of input layer
+    for l in 2..nn.get_layers().len() {
+        let z = &zs[zs.len()-l];
+        let sp = sigmoid_prime(&z);
+        //TODO: Verify that this line does what it's supposed to
+        delta = &nn.get_weights()[nn.get_weights().len()-l+1] * (&delta) * sp;
+        nabla_b[nabla_b_len-l] = delta.clone();
+        nabla_w[nabla_w_len-l] = (&delta).outer(&activations[activations.len()-l-1]);
+    }
+    (nabla_b, nabla_w)
 }
-/*
-
-        # backward pass
-        delta = self.cost_derivative(activations[-1], y) * \
-            sigmoid_prime(zs[-1])
-        nabla_b[-1] = delta
-        nabla_w[-1] = np.dot(delta, activations[-2].transpose())
-        # Note that the variable l in the loop below is used a little
-        # differently to the notation in Chapter 2 of the book.  Here,
-        # l = 1 means the last layer of neurons, l = 2 is the
-        # second-last layer, and so on.  It's a renumbering of the
-        # scheme in the book, used here to take advantage of the fact
-        # that Python can use negative indices in lists.
-        for l in xrange(2, self.num_layers):
-            z = zs[-l]
-            sp = sigmoid_prime(z)
-            delta = np.dot(self.weights[-l+1].transpose(), delta) * sp
-            nabla_b[-l] = delta
-            nabla_w[-l] = np.dot(delta, activations[-l-1].transpose())
-        return (nabla_b, nabla_w)
-
-
-
-   def backprop(self, x, y):
-        """Return a tuple "(nabla_b, nabla_w)" representing the
-        gradient for the cost function C_x.  "nabla_b" and
-        "nabla_w" are layer-by-layer lists of numpy arrays, similar
-        to "self.biases" and "self.weights"."""
-        nabla_b = [np.zeros(b.shape) for b in self.biases]
-        nabla_w = [np.zeros(w.shape) for w in self.weights]
-        # feedforward
-        activation = x
-        activations = [x] # list to store all the activations, layer by layer
-        zs = [] # list to store all the z vectors, layer by layer
-        for b, w in zip(self.biases, self.weights):
-            z = np.dot(w, activation)+b
-            zs.append(z)
-            activation = sigmoid(z)
-            activations.append(activation)
-*/
-
-fn transpose_vec(vec: &Vec<DVector<f32>>) -> DMatrix<&f32> {
-    // this eventually has to go. If we need this for any vector of DVectors we should probably
-    // think of storing it all in a DMatrix instead.
-    use nalgebra::Iterable;
-    let iter = vec.iter().flat_map(|x| x.iter());
-
-    let mut m = DMatrix::from_column_iter(vec[0].len(), vec.len(), iter);
-    m = m.transpose()
-}
-
-
 
 /// Derivative of the cost function
 fn cost_derivative(output_activations: &DVector<f32>, desired_output: &DVector<f32>)
