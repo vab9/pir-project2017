@@ -3,12 +3,11 @@ use rand::Rng;
 use rand::distributions::normal::StandardNormal;
 use nalgebra::{DMatrix, DVector, IterableMut};
 use std::str;
-use std::io::{BufReader, BufRead, BufWriter, Write};
+use std::io::{BufReader, Read, BufWriter, Write};
 use std::fs::File;
 use std::path::Path;
 use serde_json;
-use serde_derive;
-use serde::Serialize;
+use structs::Net;
 
 /// Artificial Neural Network
 ///
@@ -28,7 +27,7 @@ use serde::Serialize;
 /// // 2 "neurons" in the output layer
 /// let nnet = Network::new(vec![3, 5, 2]);
 /// ```
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone)]
 pub struct Network {
     /// a Vec outlining the topology of the ANN
     /// the first entry corresponds to the inputlayer,
@@ -99,6 +98,74 @@ impl Network {
     /// return a vector of the bias matrices of the ANN
     pub fn get_biases(&self) -> &Vec<DVector<f32>> {
         &self.biases
+    }
+    pub fn serialize(&self, filename: &Path) {
+        let mut b = Vec::new();
+        let biases = self.biases.clone();
+        for bias in biases {
+            b.push(
+                bias.at
+            );
+        }
+        let mut w = Vec::new();
+        let weights = self.weights.clone();
+        for weight in weights {
+            w.push(
+                (weight.nrows(), weight.ncols(), weight.as_vector().to_vec())
+            );
+        }
+
+        let t = Net {
+            layers: self.layers.clone(),
+            weights: w,
+            biases: b,
+
+        };
+        let j = match serde_json::to_string(&t) {
+            Ok(val) => val,
+            Err(e) => {
+                println!("{:?}",e);
+                    return;
+            },
+        };
+        let f = File::create(filename).expect("Unable to create file");
+        let mut f = BufWriter::new(f);
+        f.write_all(j.as_bytes()).expect("Unable to write data");
+
+    }
+
+    pub fn deserialize(filename: &Path) -> Result<Network, &'static str> {
+        let mut data = String::new();
+        let f = File::open(filename).expect("Unable to open file");
+        let mut br = BufReader::new(f);
+        br.read_to_string(&mut data).expect("Unable to read string");
+
+        let t: Net = match serde_json::from_str(&data) {
+            Ok(val) => val,
+            Err(e) => {
+                println!("{:?}",e);
+                return Err("failed to deserialise network");
+            },
+        };
+        let mut w = Vec::new();
+        for weight in t.weights {
+            w.push(
+                DMatrix::from_column_vector(weight.0,weight.1,&weight.2)
+                );
+        }
+        let mut b = Vec::new();
+        for bias in t.biases {
+            b.push(
+                DVector::from_slice(bias.len(),&bias)
+            );
+        }
+        Ok(
+            Network {
+                layers: t.layers,
+                weights: w,
+                biases: b,
+            }
+        )
     }
 
 }

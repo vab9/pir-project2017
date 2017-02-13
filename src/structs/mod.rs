@@ -1,10 +1,5 @@
 use std::fmt;
-use na::{DVector,DMatrix};
-use serde_json;
-use serde::{Serialize,Serializer, Deserialize, Deserializer};
-use serde_derive;
-use serde::ser::SerializeSeq;
-use std::ops::Deref;
+use na::DVector;
 
 /// enum flower names
 #[derive(Debug, Clone, Copy)]
@@ -59,38 +54,13 @@ impl From <Flower> for DVector<f32> {
                                 fl.petal_width])
     }
 }
-pub struct WrapDVector{
-    DVec: DVector<f32>
-}
-impl Serialize for WrapDVector
-{
-    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    {
-        let mut seq = serializer.serialize_seq(Some(self.DVec.len()))?;
-        for e in 0..self.DVec.len() {
-            seq.serialize_element(&self.DVec[e])?;
-        }
-        seq.end()
-    }
-}
 
-impl Deref for WrapDVector {
-    type Target = DVector<f32>;
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Net {
 
-    fn deref(&self) -> &self::Target {
-        &self.DVec
-    }
-}
-
-pub struct WrapDMatrix(DMatrix<f32>);
-impl Serialize for WrapDMatrix
-{
-    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    {
-        let mut seq = serializer.serialize_seq(Some(self.0.nrows()*self.0.ncols()))?;
-        for e in self.0.as_vector() {
-            seq.serialize_element(e)?;
-        }
-        seq.end()
-    }
+    pub layers: Vec<u8>,
+    /// a Vec that contains the weights of the respective layer
+    pub weights: Vec<(usize, usize, Vec<f32>)>,
+    /// a Vec cointaining the biases of the respective layer
+    pub biases: Vec<Vec<f32>>,
 }

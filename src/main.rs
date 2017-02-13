@@ -47,4 +47,14 @@ fn main() {
     println!("FF: {:?}",
              nn.feedforward(nalgebra::DVector::from_element(nn.get_layers()[0] as usize, 0 as f32))
     );
+
+    nn.serialize(&path.join(&config));
+    let tt = match nn::Network::deserialize(&path.join(&config)) {
+        Ok(val) => val,
+        Err(e) => { println!("{:?}",e);
+                    return;
+        }
+    };
+    tt.get_layers();
+
 }
