@@ -16,7 +16,6 @@ use structs::{FlowerName, Classifier};
 
 
 fn main() {
-
     // init logger
     logging::init_logger();
 

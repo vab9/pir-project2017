@@ -78,17 +78,17 @@ impl Network {
     }
 
     /// return the layers used to initialize the ANN
-    pub fn get_layers(&self) -> &Vec<u8> {
+    pub fn get_layers(&self) -> &[u8] {
         &self.layers
     }
 
     /// return a vector of the weight matrices of the ANN
-    pub fn get_weights(&self) -> &Vec<DMatrix<f32>> {
+    pub fn get_weights(&self) -> &[DMatrix<f32>] {
         &self.weights
     }
 
     /// return a vector of the bias matrices of the ANN
-    pub fn get_biases(&self) -> &Vec<DVector<f32>> {
+    pub fn get_biases(&self) -> &[DVector<f32>] {
         &self.biases
     }
 }
