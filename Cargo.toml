@@ -1,7 +1,12 @@
 [package]
 name = "rustle-my-net"
 version = "0.1.0"
-authors = ["Tom Schneider <toschneider@uos.de>"]
+authors = [
+    "Johann Arndt <joarndt@uos.de>",
+    "Victor Brinkhege <vbrinkhege@uos.de>",
+    "Lukas Kalde <lkalde@uos.de>",
+    "Tom Schneider <toschneider@uos.de>",
+]
 
 [dependencies]
 clap = "2.20.0"

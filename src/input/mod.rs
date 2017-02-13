@@ -1,29 +1,29 @@
 extern crate clap;
 
 use structs::{Flower, FlowerName};
-use std::io::{BufReader, BufRead, Result};
+use std::io::{self, BufReader, BufRead};
 use std::fs::File;
 use std::path::Path;
-use self::clap::{Arg, App, SubCommand};
+use self::clap::{Arg, App, AppSettings, SubCommand};
 use std::io::{Error, ErrorKind};
 
 
 /// reads content of given file and returns a result with
 /// either the Vector of Flowers or Err
-pub fn read(filename: &Path) -> Result<Vec<Flower>> {
+pub fn read(filename: &Path) -> io::Result<Vec<Flower>> {
 
     // Tries to open a file and reads it line for line
-    let f = try!(File::open(filename));
+    let f = File::open(filename)?;
     let reader = BufReader::new(&f);
     let mut flowers = Vec::new();
 
     // goes through every line and parses into a flower if valid
     for line in reader.lines() {
-        let l = line.unwrap();
+        let l = line?;
         let content = l.split(',').collect::<Vec<&str>>();
 
         // matches if its a valid flower
-        match is_flower(&content[..]) {
+        match is_flower(&content) {
             Ok(res) => flowers.push(res),
             Err(e) => println!("{}", e),
         }
@@ -32,8 +32,8 @@ pub fn read(filename: &Path) -> Result<Vec<Flower>> {
 }
 
 /// parses the String array into the flower type and returns it as
-/// as a Result
-fn is_flower(flower: &[&str]) -> Result<Flower> {
+/// as a io::Result
+fn is_flower(flower: &[&str]) -> io::Result<Flower> {
 
     // just returns for every value of the flower
     // or an std::io::Error
@@ -73,6 +73,7 @@ pub fn commands() -> (String, String, String) {
     let matches = App::new("rustle my net")
         .subcommand(SubCommand::with_name("learn"))
         .subcommand(SubCommand::with_name("classify"))
+        .setting(AppSettings::SubcommandRequiredElseHelp)
         .arg(Arg::with_name("data")
             .long("data")
             .short("d")
