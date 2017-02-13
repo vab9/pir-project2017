@@ -1,22 +1,21 @@
 extern crate rand;
-extern crate nalgebra as na;
-
 #[macro_use]
 extern crate log;
+extern crate nalgebra as na;
 
 mod input;
 mod structs;
 mod nn;
 mod logging;
 
-
 use input::{read, commands};
 use std::env;
-use structs::{FlowerName, Classifier};
+use structs::Classifier;
+use structs::flower::FlowerName;
+
 
 
 fn main() {
-
     // init logger
     logging::init_logger();
 

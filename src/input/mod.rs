@@ -1,9 +1,9 @@
 extern crate clap;
 
-use structs::Flower;
 use std::io::{self, BufReader, BufRead};
 use std::fs::File;
 use std::path::Path;
+use structs::flower::Flower;
 
 use self::clap::{Arg, App, AppSettings, SubCommand};
 
