@@ -9,6 +9,7 @@ use std::path::Path;
 use serde_json;
 use structs::Net;
 
+
 /// Artificial Neural Network
 ///
 /// This struct represents a simple Artificial Neural Network (ANN) using
@@ -44,14 +45,12 @@ pub struct Network {
 impl Network {
     /// build a new Network with a topology Vector
     pub fn new(sizes: Vec<u8>) -> Result<Network, &'static str> {
-        if sizes.len() < 3 {
-            return Err("Not enough layers");
-        }
+        assert!(sizes.len() >= 3, "at least three layers required");
 
         // Store the weights and biases in lists
         // We will not need weights or biases for input layer, so ignore that (hence -1)
-        let mut weights: Vec<DMatrix<f32>> = Vec::with_capacity(sizes.len() - 1);
-        let mut biases: Vec<DVector<f32>> = Vec::with_capacity(sizes.len() - 1);
+        let mut weights = Vec::with_capacity(sizes.len() - 1);
+        let mut biases = Vec::with_capacity(sizes.len() - 1);
 
         let mut rng = rand::thread_rng();
 
@@ -86,17 +85,17 @@ impl Network {
     }
 
     /// return the layers used to initialize the ANN
-    pub fn get_layers(&self) -> &Vec<u8> {
+    pub fn get_layers(&self) -> &[u8] {
         &self.layers
     }
 
     /// return a vector of the weight matrices of the ANN
-    pub fn get_weights(&self) -> &Vec<DMatrix<f32>> {
+    pub fn get_weights(&self) -> &[DMatrix<f32>] {
         &self.weights
     }
 
     /// return a vector of the bias matrices of the ANN
-    pub fn get_biases(&self) -> &Vec<DVector<f32>> {
+    pub fn get_biases(&self) -> &[DVector<f32>] {
         &self.biases
     }
     pub fn serialize(&self, filename: &Path) {

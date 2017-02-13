@@ -1,57 +1,40 @@
-use std::fmt;
-use na::DVector;
+pub mod flower;
 
-/// enum flower names
-#[derive(Debug, Clone, Copy)]
-pub enum FlowerName {
-    IrisSetosa,
-    IrisVersicolor,
-    IrisVirginica,
+use structs::flower::{Flower, FlowerName};
+use nalgebra::DVector;
+use std::io;
+
+/// Struct for u8
+pub struct Data {
+    /// class for the NN (Result)
+    class: u8,
+    /// Input Vector for the Inputlayer of the NN
+    input: DVector<f32>,
 }
 
-/// flowertype that contains the 4 inputs and the Flowername
-#[derive(Debug, Clone, Copy)]
-pub struct Flower {
-    name: FlowerName,
-    sepal_length: f32,
-    sepal_width: f32,
-    petal_length: f32,
-    petal_width: f32,
-}
 
-/// constuctor for the Flowertype
-impl Flower {
-    pub fn new(n: FlowerName, sl: f32, sw: f32, pl: f32, pw: f32) -> Flower {
-        Flower {
-            name: n,
-            sepal_length: sl,
-            sepal_width: sw,
-            petal_length: pl,
-            petal_width: pw,
+impl Data {
+    /// Generates a new Data struct with a Vector and a u8(class)
+    pub fn new(vec: DVector<f32>, class: u8) -> Data {
+        Data {
+            class: class,
+            input: vec,
         }
     }
-}
 
-/// easy printing of the flower type
-impl fmt::Display for Flower {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f,
-               "({:?}, {}, {}, {}, {})",
-               self.name,
-               self.sepal_length,
-               self.sepal_width,
-               self.petal_length,
-               self.petal_width)
+    /// Generates a new Data struct from a Flower type
+    pub fn from_flower(flower: Flower) -> Data {
+        Data::new(DVector::from(flower), flower.name.classify())
     }
-}
 
-impl From <Flower> for DVector<f32> {
-    fn from(fl: Flower) -> DVector<f32> {
+    /// getter for the Input
+    pub fn get_input(&self) -> &DVector<f32> {
+        &self.input
+    }
 
-        DVector::from_slice(4,&[fl.sepal_length,
-                                fl.sepal_width,
-                                fl.petal_length,
-                                fl.petal_width])
+    /// getter for the class
+    pub fn get_class(&self) -> &u8 {
+        &self.class
     }
 }
 
@@ -63,4 +46,10 @@ pub struct Net {
     pub weights: Vec<(usize, usize, Vec<f32>)>,
     /// a Vec cointaining the biases of the respective layer
     pub biases: Vec<Vec<f32>>,
+}
+
+/// trait that is used to classify or declassify
+pub trait Classifier {
+    fn classify(&self) -> u8;
+    fn declassify(num: u8) -> Result<FlowerName, io::Error>;
 }
