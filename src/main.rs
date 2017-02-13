@@ -17,9 +17,6 @@ use structs::{FlowerName, Classifier};
 
 fn main() {
 
-    // does travis really need output?
-    println!("hey travis");
-
     // init logger
     logging::init_logger();
 
@@ -45,7 +42,7 @@ fn main() {
 
     info!("{:?} {:?}",
           m.get_input(),
-          FlowerName::declassify(*m.get_classifier()).unwrap());
+          FlowerName::declassify(*m.get_class()).unwrap());
 
     // just dummy nn for no warnings
     let nn = nn::Network::new(vec![4, 20, 3]).unwrap();

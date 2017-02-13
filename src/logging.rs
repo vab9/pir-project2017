@@ -39,10 +39,10 @@ pub fn init_logger() {
     // output is in the following format: [timestamp] [loglevel] message
     let logger_config = fern::DispatchConfig {
         format: Box::new(|msg: &str, level: &log::LogLevel, _location: &log::LogLocation| {
-            format!("[{}][{}] {}", time::now().rfc3339(), level, msg)
+            format!("[{}] [{}] {}", time::now().rfc3339(), level, msg)
         }),
         // set the output file
-        output: vec![fern::OutputConfig::file(&logfile_path)],
+        output: vec![fern::OutputConfig::stdout(), fern::OutputConfig::file(&logfile_path)],
         level: log::LogLevelFilter::Trace,
     };
 
