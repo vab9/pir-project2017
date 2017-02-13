@@ -1,16 +1,18 @@
 use structs::Data;
 use nn::Network;
-use nalgebra::{DVector, DMatrix};
+use na::{DVector, DMatrix};
 
 
 pub fn sgd(mut nn: &mut Network,
            mut training_data: Vec<Data>,
-           epochs: u8, mini_batch_size: u8,
-           eta: f32, mut test_data: Option<Vec<Data>>) {
-    use rand::{ self, Rng};
+           epochs: u8,
+           mini_batch_size: u8,
+           eta: f32,
+           mut test_data: Option<Vec<Data>>) {
+    use rand::{self, Rng};
     let mut rng = rand::thread_rng();
 
-    let test_data_n = match test_data{
+    let test_data_n = match test_data {
         Some(value) => value.len(),
         None => 0,
     };
@@ -21,7 +23,10 @@ pub fn sgd(mut nn: &mut Network,
             update_mini_batch(&mut nn, &mut mini_batch, eta);
         }
         if test_data_n > 0 {
-            println!("Epoch {}: {}/{}", j, evaluate(&nn, test_data.unwrap()), test_data_n);
+            println!("Epoch {}: {}/{}",
+                     j,
+                     evaluate(&nn, test_data.unwrap()),
+                     test_data_n);
         } else {
             println!("Epoch {} complete!", j);
         }
@@ -44,9 +49,8 @@ fn update_mini_batch(mut nn: &mut Network, mut mini_batch: &mut [Data], eta: f32
 
     // for each dataset in mini_batch: calculate gradients, add to nablas
     for data in mini_batch {
-        let (delta_nabla_b, delta_nabla_w) = backprop(&mut nn,
-                                                      data.get_input(),
-                                                      data.get_class_vector());
+        let (delta_nabla_b, delta_nabla_w) =
+            backprop(&mut nn, data.get_input(), data.get_class_vector());
         for (mut nb, dnb) in nabla_b.iter_mut().zip(delta_nabla_b.iter()) {
             // TODO: This is really not good. Someone needs to fix this.
             *nb += dnb.clone();
@@ -57,22 +61,23 @@ fn update_mini_batch(mut nn: &mut Network, mut mini_batch: &mut [Data], eta: f32
         }
     }
 
-    for (mut w, nw) in nn.get_weights_mut().iter_mut().zip( nabla_w.iter() ) {
+    for (mut w, nw) in nn.get_weights_mut().iter_mut().zip(nabla_w.iter()) {
         *w -= eta / (mini_batch_len as f32) * nw.clone();
     }
 
 
-    for (mut b, nb) in nn.get_biases_mut().iter_mut().zip( nabla_b.iter() ) {
+    for (mut b, nb) in nn.get_biases_mut().iter_mut().zip(nabla_b.iter()) {
         *b -= eta / (mini_batch_len as f32) * nb.clone();
     }
 }
 
 
 /// Gets the desired changes in weights and biases for one training example
-fn backprop(nn: &mut Network, data: &DVector<f32>, desired_output: &DVector<f32>)
+fn backprop(nn: &mut Network,
+            data: &DVector<f32>,
+            desired_output: &DVector<f32>)
             -> (Vec<DVector<f32>>, Vec<DMatrix<f32>>) {
-    use nalgebra::{self, Dot, Outer};
-    //use nalgebra::Dot;
+    use na::{self, Dot, Outer};
     use nn;
 
     // holds all biases of the network
@@ -102,53 +107,59 @@ fn backprop(nn: &mut Network, data: &DVector<f32>, desired_output: &DVector<f32>
     // execute feedforward
     for (biases, weights) in nn.get_biases().iter().zip(nn.get_weights().iter()) {
         // TODO: Remove Clone
-        let z = weights * &activations[activations.len()-1] + biases.clone();
+        let z = weights * &activations[activations.len() - 1] + biases.clone();
         zs.push(z);
-        activation = nn::sigmoid(&zs[zs.len()-1]);
+        activation = nn::sigmoid(&zs[zs.len() - 1]);
         activations.push(activation)
     }
 
     // backward pass
-    let mut delta = cost_derivative(&activations[activations.len()], desired_output)
-        * sigmoid_prime(&zs[zs.len()-1]);
-    let nabla_b_len = nabla_b.len() -1;
-    let nabla_w_len = nabla_w.len() -1;
+    let mut delta = cost_derivative(&activations[activations.len()], desired_output) *
+                    sigmoid_prime(&zs[zs.len() - 1]);
+    let nabla_b_len = nabla_b.len() - 1;
+    let nabla_w_len = nabla_w.len() - 1;
     // TODO: Remove clone
     nabla_b[nabla_b_len] = delta.clone();
-    nabla_w[nabla_w_len] = (&nabla_b[nabla_b_len]).outer(&activations[activations.len()-2]);
+    nabla_w[nabla_w_len] = (&nabla_b[nabla_b_len]).outer(&activations[activations.len() - 2]);
 
     //TODO: Verify if we need to iterate only to ...len()-1 because of input layer
     for l in 2..nn.get_layers().len() {
-        let z = &zs[zs.len()-l];
+        let z = &zs[zs.len() - l];
         let sp = sigmoid_prime(&z);
         //TODO: Verify that this line does what it's supposed to
-        delta = &nn.get_weights()[nn.get_weights().len()-l+1] * (&delta) * sp;
-        nabla_b[nabla_b_len-l] = delta.clone();
-        nabla_w[nabla_w_len-l] = (&delta).outer(&activations[activations.len()-l-1]);
+        delta = &nn.get_weights()[nn.get_weights().len() - l + 1] * (&delta) * sp;
+        nabla_b[nabla_b_len - l] = delta.clone();
+        nabla_w[nabla_w_len - l] = (&delta).outer(&activations[activations.len() - l - 1]);
     }
     (nabla_b, nabla_w)
 }
 
 /// Derivative of the cost function
-fn cost_derivative(output_activations: &DVector<f32>, desired_output: &DVector<f32>)
+fn cost_derivative(output_activations: &DVector<f32>,
+                   desired_output: &DVector<f32>)
                    -> DVector<f32> {
     // easy, derivative of quadratic cost function is:
     //TODO: Get rid of clone
-    output_activations.clone()-desired_output.clone()
+    output_activations.clone() - desired_output.clone()
 }
 
 
 /// Derivative of the sigmoid function
-fn sigmoid_prime(z: &DVector<f32>) -> DVector<f32>{
+fn sigmoid_prime(z: &DVector<f32>) -> DVector<f32> {
     use nn;
     // Derivative of sigmoid function, ask wolfram alpha if you don't believe me
     nn::sigmoid(z) * (1.0f32 - nn::sigmoid(z))
 }
 
 fn evaluate(nn: &Network, &test_data: Vec<Data>) -> u8 {
-    test_results = test_data.iter().flat_map(|x|x.iter()).map(|ref x| nn.feedforward(x)).enumerate().max_by(|&(_, item)| item).collect();
+    test_results = test_data.iter()
+        .flat_map(|x| x.iter())
+        .map(|ref x| nn.feedforward(x))
+        .enumerate()
+        .max_by(|&(_, item)| item)
+        .collect();
     unimplemented!();
-        //array.iter().enumerate().max_by(|&(_, item)| item)
+    //array.iter().enumerate().max_by(|&(_, item)| item)
 }
 
 /*
