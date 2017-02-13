@@ -61,7 +61,8 @@ fn update_mini_batch(mut nn: &mut Network, mut mini_batch: &mut [Data], eta: f32
 
 fn backprop(nn: &mut Network, data: &DVector<f32>, desired_output: &DVector<f32>)
             -> (Vec<DVector<f32>>, Vec<DMatrix<f32>>) {
-    use nalgebra::{self, dot};
+    use nalgebra::{self, Dot};
+    //use nalgebra::Dot;
     use nn;
 
     // holds all biases of the network
@@ -104,37 +105,10 @@ fn backprop(nn: &mut Network, data: &DVector<f32>, desired_output: &DVector<f32>
     let nabla_w_len = nabla_w.len() -1;
     nabla_b[nabla_b_len] = delta;
     //let mut act_transp = DMatrix::from_column_iter(
-    //nabla_w[nabla_w_len] = &nabla_b[nabla_b_len] * activations[activations.len()-2]
+    nabla_w[nabla_w_len] = (&nabla_b[nabla_b_len]).clone().dot(&activations[activations.len()-2]).clone();
 
     unimplemented!();
 }
-
-fn transpose_vec(vec: &Vec<DVector<f32>>) -> DMatrix<&f32> {
-    use nalgebra::Iterable;
-    let iter = vec.iter().flat_map(|x| x.iter());
-
-    let mut m = DMatrix::from_column_iter(vec[0].len(), vec.len(), iter);
-    m = m.transpose()
-}
-
-
-
-/// Derivative of the cost function
-fn cost_derivative(output_activations: &DVector<f32>, desired_output: &DVector<f32>)
-                   -> DVector<f32> {
-    // easy, derivative of quadratic cost function is:
-    //TODO: Get rid of clone
-    output_activations.clone()-desired_output.clone()
-}
-
-
-/// Derivative of the sigmoid function
-fn sigmoid_prime(z: &DVector<f32>) -> DVector<f32>{
-    use nn;
-    // Derivative of sigmoid function, ask wolfram alpha if you don't believe me
-    nn::sigmoid(z) * (1.0f32 - nn::sigmoid(z))
-}
-
 /*
 
         # backward pass
@@ -175,3 +149,31 @@ fn sigmoid_prime(z: &DVector<f32>) -> DVector<f32>{
             activation = sigmoid(z)
             activations.append(activation)
 */
+
+fn transpose_vec(vec: &Vec<DVector<f32>>) -> DMatrix<&f32> {
+    // this eventually has to go. If we need this for any vector of DVectors we should probably
+    // think of storing it all in a DMatrix instead.
+    use nalgebra::Iterable;
+    let iter = vec.iter().flat_map(|x| x.iter());
+
+    let mut m = DMatrix::from_column_iter(vec[0].len(), vec.len(), iter);
+    m = m.transpose()
+}
+
+
+
+/// Derivative of the cost function
+fn cost_derivative(output_activations: &DVector<f32>, desired_output: &DVector<f32>)
+                   -> DVector<f32> {
+    // easy, derivative of quadratic cost function is:
+    //TODO: Get rid of clone
+    output_activations.clone()-desired_output.clone()
+}
+
+
+/// Derivative of the sigmoid function
+fn sigmoid_prime(z: &DVector<f32>) -> DVector<f32>{
+    use nn;
+    // Derivative of sigmoid function, ask wolfram alpha if you don't believe me
+    nn::sigmoid(z) * (1.0f32 - nn::sigmoid(z))
+}
