@@ -38,14 +38,12 @@ pub struct Network {
 impl Network {
     /// build a new Network with a topology Vector
     pub fn new(sizes: Vec<u8>) -> Result<Network, &'static str> {
-        if sizes.len() < 3 {
-            return Err("Not enough layers");
-        }
+        assert!(sizes.len() >= 3, "at least three layers required");
 
         // Store the weights and biases in lists
         // We will not need weights or biases for input layer, so ignore that (hence -1)
-        let mut weights: Vec<DMatrix<f32>> = Vec::with_capacity(sizes.len() - 1);
-        let mut biases: Vec<DVector<f32>> = Vec::with_capacity(sizes.len() - 1);
+        let mut weights = Vec::with_capacity(sizes.len() - 1);
+        let mut biases = Vec::with_capacity(sizes.len() - 1);
 
         let mut rng = rand::thread_rng();
 

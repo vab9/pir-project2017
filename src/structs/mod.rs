@@ -6,25 +6,25 @@ use std::str::FromStr;
 
 /// Struct for u8
 pub struct Data {
-    /// classifier for the NN (Result)
-    classifier: u8,
+    /// class for the NN (Result)
+    class: u8,
     /// Input Vector for the Inputlayer of the NN
     input: DVector<f32>,
 }
 
 
 impl Data {
-    /// Generates a new Data struct with a Vector and an u8(classifier)
-    pub fn new(vec: DVector<f32>, clas: u8) -> Data {
+    /// Generates a new Data struct with a Vector and a u8(class)
+    pub fn new(vec: DVector<f32>, class: u8) -> Data {
         Data {
-            classifier: clas,
+            class: class,
             input: vec,
         }
     }
 
     /// Generates a new Data struct from a Flower type
     pub fn from_flower(flower: Flower) -> Data {
-        Data::new(DVector::from(flower), flower.get_flower_name().classify())
+        Data::new(DVector::from(flower), flower.name.classify())
     }
 
     /// getter for the Input
@@ -32,9 +32,9 @@ impl Data {
         &self.input
     }
 
-    /// getter for the classifier
-    pub fn get_classifier(&self) -> &u8 {
-        &self.classifier
+    /// getter for the class
+    pub fn get_class(&self) -> &u8 {
+        &self.class
     }
 }
 
@@ -72,7 +72,7 @@ impl Classifier for FlowerName {
             0 => Ok(FlowerName::IrisSetosa),
             1 => Ok(FlowerName::IrisVersicolor),
             2 => Ok(FlowerName::IrisVirginica),
-            _ => Err(io::Error::new(io::ErrorKind::Other, "Not a f32")),
+            _ => Err(io::Error::new(io::ErrorKind::InvalidInput, "Not a valid flower class")),
         }
     }
 }
@@ -80,28 +80,11 @@ impl Classifier for FlowerName {
 /// flowertype that contains the 4 inputs and the Flowername
 #[derive(Debug, Clone, Copy)]
 pub struct Flower {
-    name: FlowerName,
-    sepal_length: f32,
-    sepal_width: f32,
-    petal_length: f32,
-    petal_width: f32,
-}
-
-/// constuctor for the Flowertype
-impl Flower {
-    pub fn new(n: FlowerName, sl: f32, sw: f32, pl: f32, pw: f32) -> Flower {
-        Flower {
-            name: n,
-            sepal_length: sl,
-            sepal_width: sw,
-            petal_length: pl,
-            petal_width: pw,
-        }
-    }
-
-    pub fn get_flower_name(&self) -> FlowerName {
-        self.name
-    }
+    pub name: FlowerName,
+    pub sepal_length: f32,
+    pub sepal_width: f32,
+    pub petal_length: f32,
+    pub petal_width: f32,
 }
 
 impl FromStr for Flower {
@@ -133,7 +116,13 @@ impl FromStr for Flower {
             }
         };
 
-        Ok(Flower::new(name, sepal_length, sepal_width, petal_length, petal_width))
+        Ok(Flower {
+            name: name,
+            sepal_length: sepal_length,
+            sepal_width: sepal_width,
+            petal_length: petal_length,
+            petal_width: petal_width,
+        })
 
     }
 }
