@@ -7,11 +7,9 @@ use std::io;
 /// Struct for u8
 #[derive(Clone)]
 pub struct Data {
-    /// class for the NN (Result)
-    //class: u8,
-    /// Input Vector for the Inputlayer of the NN
+    /// Input Vector for the input layer of the NN
     input: DVector<f32>,
-    //TODO: Completly replace classifier by class vector
+    /// actual class vector of the for the NN (Result)
     class_vector: DVector<f32>,
 }
 
@@ -22,7 +20,6 @@ impl Data {
         let mut class_v = DVector::from_element(3, 0.0f32);
         class_v[class as usize] = 1.0f32;
         Data {
-            //class: class,
             input: vec,
             class_vector: class_v,
         }
@@ -37,11 +34,6 @@ impl Data {
     pub fn get_input(&self) -> &DVector<f32> {
         &self.input
     }
-
-    /*/// getter for the class
-    pub fn get_class(&self) -> &u8 {
-        &self.class
-    }*/
 
     /// Get the class_vector
     pub fn get_class_vector(&self) -> &DVector<f32> {

@@ -28,20 +28,20 @@ fn main() {
         logging::init_logger(verbosity);
     }
 
-    info!("Starting_up");
-    info!("Running with LogLevel: {:?}", verbosity);
+    info!("Starting_up...");
+    info!("Running with Loging Level: {:?}", verbosity);
 
-    // tries to open the file
+    // we got the input data from the parse_commands() invocation above
     let mut input = data.unwrap();
 
+    info!("config: {:?}", config);
+    info!("subcommand: {:?}", subcom);
 
-    info!("{:?} {:?}", config, subcom);
-
-
+    // init RNG
     let mut rng = rand::thread_rng();
     rng.shuffle(&mut input);
 
-
+    // split into training and test data
     let mut training_data: Vec<Data> = Vec::with_capacity(input.len() - 30);
     for i in 0..input.len() - T_SIZE {
         training_data.push(structs::Data::from_flower(input[i]));
@@ -53,14 +53,12 @@ fn main() {
     }
 
     // just dummy nn for no warnings
-
     info!("hi Network");
     let mut nn = nn::Network::new(vec![4, 60, 3]).unwrap();
-
 
     nn::learning::sgd(&mut nn, training_data, 30000, 70, 0.15, test_data);
     // nn.feedforward(na::DVector::from_element(nn.get_layers()[0] as usize, 0.0)));
 
-    info!("ended");
+    info!("...terminated!");
 
 }

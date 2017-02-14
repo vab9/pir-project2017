@@ -56,7 +56,6 @@ pub fn parse_commands
 
     // TODO: remove unwrap
     let data = parse_data(matches.value_of("data").unwrap());
-    // let () = data.unwrap();
 
     // TODO: return a struct or a hashmap or something more elegant instead of a tuple
     (data,
