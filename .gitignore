@@ -5,4 +5,3 @@ Cargo.lock
 logs/*
 *.sublime-*
 data/config.json
-
