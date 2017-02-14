@@ -1,3 +1,5 @@
+pub mod util;
+
 extern crate clap;
 
 use log::LogLevelFilter;

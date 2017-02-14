@@ -13,7 +13,9 @@ mod logging;
 
 use input::{read, parse_commands};
 use std::env;
-use structs::Classifier;
+use std::fs::File;
+use std::io::{BufReader, BufWriter};
+use structs::{Classifier, SerializableNet};
 use structs::flower::FlowerName;
 
 
@@ -29,9 +31,6 @@ fn main() {
 
     info!("Starting_up");
     info!("Running with LogLevel: {:?}", verbosity);
-
-
-
 
     // gets path for data
     let path = env::current_dir().unwrap();
@@ -53,7 +52,7 @@ fn main() {
           FlowerName::declassify(*m.get_class()).unwrap());
 
     // just dummy nn for no warnings
-    let nn = nn::Network::new(vec![4, 20, 3]).unwrap();
+    let nn = nn::Network::new(vec![4, 7, 3]).unwrap();
 
     // dummy print for no warnings
     info!("{} {} {}",
@@ -61,18 +60,24 @@ fn main() {
           nn.get_weights().len(),
           nn.get_biases().len());
 
-    info!("FF: {:?}",
+    // ========================================================
+    // CODE SHOWING THAT SERIALIZATION WORKS
+    // ========================================================
 
-          nn.feedforward(na::DVector::from_element(nn.get_layers()[0] as usize, 0.0)));
-    info!("ended");
-    nn.serialize(&path.join(&config));
+    // wrap it in a SerializableNet
+    let serializable_net: SerializableNet = nn.into();
+    // serialize it
+    let f = File::create(&path.join(&config)).unwrap();
+    // new scope here b/c writer needs to be dropped before we reopen the file
+    {
+        let mut writer = BufWriter::new(f);
+        serde_json::to_writer(&mut writer, &serializable_net).unwrap();
+    }
 
-    let tt = match nn::Network::deserialize(&path.join(&config)) {
-        Ok(val) => val,
-        Err(e) => {
-            println!("{:?}", e);
-            return;
-        }
-    };
-    tt.get_layers();
+    let f = File::open(&path.join(&config)).unwrap();
+    let reader = BufReader::new(f);
+    let my_net: SerializableNet = serde_json::from_reader(reader).unwrap();
+    let new_net: nn::Network = my_net.into();
+    info!("{:?}", new_net);
+
 }

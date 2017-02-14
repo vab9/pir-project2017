@@ -2,12 +2,10 @@ use rand;
 use rand::Rng;
 use rand::distributions::normal::StandardNormal;
 use na::{DMatrix, DVector, IterableMut};
-use std::str;
-use std::io::{BufReader, Read, BufWriter, Write};
 use std::fs::File;
-use std::path::Path;
-use serde_json;
-use structs::Net;
+use std::io::{self, BufReader, BufWriter};
+use std::str;
+use structs::SerializableNet;
 
 
 /// Artificial Neural Network
@@ -99,80 +97,26 @@ impl Network {
         &self.biases
     }
 
-    /// serializes the networks curent state as json in the given file
-    pub fn serialize(&self, filename: &Path) {
-        let mut b = Vec::new();
-        let biases = self.biases.clone();
-        // parses `Vec<DVector<f32>>` into `Vec<Vec<f32>>`
-        // for usability of json_derive
-        for bias in biases {
-            b.push(bias.at);
+    pub fn to_file(self) -> Result<(), io::Error> {
+        // ========================================================
+        // CODE SHOWING THAT SERIALIZATION WORKS
+        // ========================================================
+
+        // wrap it in a SerializableNet
+        let serializable_net: SerializableNet = self.into();
+        // serialize it
+        let f = File::create(&path.join(&config)).unwrap();
+        // new scope here b/c writer needs to be dropped before we reopen the file
+        {
+            let mut writer = BufWriter::new(f);
+            serde_json::to_writer(&mut writer, &serializable_net).unwrap();
         }
 
-        let mut w = Vec::new();
-        let weights = self.weights.clone();
-        // parses `Vec<DMatrix<f32>>` into `Vec<(usize, usize, Vec<f32>)>`
-        // for usability of json_derive
-        for weight in weights {
-            w.push((weight.nrows(), weight.ncols(), weight.as_vector().to_vec()));
-        }
-
-        // container for network data
-        let t = Net {
-            layers: self.layers.clone(),
-            weights: w,
-            biases: b,
-        };
-
-        // parses struct into string of json format
-        let j = match serde_json::to_string(&t) {
-            Ok(val) => val,
-            Err(e) => {
-                println!("{:?}", e);
-                return;
-            }
-        };
-
-        // writes data into given file
-        let f = File::create(filename).expect("Unable to create file");
-        let mut f = BufWriter::new(f);
-        f.write_all(j.as_bytes()).expect("Unable to write data");
-    }
-
-    /// returns the deserialized network state out of the given file
-    pub fn deserialize(filename: &Path) -> Result<Network, &'static str> {
-        // reads state from file into string
-        let mut data = String::new();
-        let f = File::open(filename).expect("Unable to open file");
-        let mut br = BufReader::new(f);
-        br.read_to_string(&mut data).expect("Unable to read string");
-
-        // parses string into network container
-        let t: Net = match serde_json::from_str(&data) {
-            Ok(val) => val,
-            Err(e) => {
-                println!("{:?}", e);
-                return Err("failed to deserialise network");
-            }
-        };
-
-        // parses `Vec<(usize, usize, Vec<f32>)>` into `Dmatrix<f32>`
-        let mut w = Vec::new();
-        for weight in t.weights {
-            w.push(DMatrix::from_column_vector(weight.0, weight.1, &weight.2));
-        }
-
-        // parses `Vec<Vec<f32>>` into `Vec<DVector<f32>>`
-        let mut b = Vec::new();
-        for bias in t.biases {
-            b.push(DVector::from_slice(bias.len(), &bias));
-        }
-
-        Ok(Network {
-            layers: t.layers,
-            weights: w,
-            biases: b,
-        })
+        let f = File::open(&path.join(&config)).unwrap();
+        let reader = BufReader::new(f);
+        let my_net: SerializableNet = serde_json::from_reader(reader).unwrap();
+        let new_net: nn::Network = my_net.into();
+        info!("{:?}", new_net);
     }
 }
 
@@ -183,6 +127,28 @@ fn sigmoid(arr: DVector<f32>) -> DVector<f32> {
         *elem = 1.0 / (1.0 + (elem).exp());
     }
     sig
+}
+
+impl From<SerializableNet> for Network {
+    fn from(ser_net: SerializableNet) -> Self {
+
+        let mut weights: Vec<DMatrix<f32>> = Vec::new();
+        for v in ser_net.weights {
+            let (nrows, ncols) = (v.0, v.1);
+            weights.push(DMatrix::from_column_vector(nrows, ncols, &v.2))
+        }
+
+        let mut biases: Vec<DVector<f32>> = Vec::new();
+        for v in ser_net.biases {
+            biases.push(DVector::from_slice(v.len(), &v))
+        }
+
+        Network {
+            layers: ser_net.layers,
+            weights: weights,
+            biases: biases,
+        }
+    }
 }
 
 
