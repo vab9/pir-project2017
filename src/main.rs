@@ -13,6 +13,7 @@ mod logging;
 
 use input::parse_commands;
 use nn::Network;
+use rand::Rng;
 use std::env;
 use structs::Data;
 
@@ -25,15 +26,12 @@ fn main() {
     // parses commands
     let (data, config, subcom, verbosity) = parse_commands();
 
-    use rand::{self, Rng};
-
-    // init logger
     if let Some(verbosity) = verbosity {
         logging::init_logger(verbosity);
     }
 
     info!("Starting_up...");
-    info!("Running with Loging Level: {:?}", verbosity);
+    info!("Running with Logging Level: {:?}", verbosity);
 
     // we got the input data from the parse_commands() invocation above
     let mut input = data.unwrap();
@@ -61,7 +59,7 @@ fn main() {
     // create the network
     let mut nn = nn::Network::new(vec![4, 30, 3]).unwrap();
     // learn!
-    nn::learning::sgd(&mut nn, training_data, 30000, 70, 0.15, test_data);
+    nn::learning::sgd(&mut nn, training_data, 10, 70, 0.15, test_data);
 
     // ========================================================
     // CODE SHOWING HOW SERIALIZATION WORKS
