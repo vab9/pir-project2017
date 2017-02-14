@@ -1,3 +1,5 @@
+pub mod learning;
+
 use rand;
 use rand::Rng;
 use rand::distributions::normal::StandardNormal;
@@ -70,11 +72,12 @@ impl Network {
     }
 
     /// Feed input through network, return output layer activation level
-    pub fn feedforward(&self, mut a: DVector<f32>) -> DVector<f32> {
+    pub fn feedforward(&self, a: &DVector<f32>) -> DVector<f32> {
+        let mut act = a.clone();
         for (weight, bias) in self.weights.iter().zip(self.biases.clone().into_iter()) {
-            a = sigmoid(weight * a + bias);
+            act = sigmoid(&(weight * act + bias));
         }
-        a
+        act
     }
 
     /// return the layers used to initialize the ANN
@@ -87,14 +90,24 @@ impl Network {
         &self.weights
     }
 
+    /// return a mutable vector of the weight matrices of the ANN
+    pub fn get_weights_mut(&mut self) -> &mut Vec<DMatrix<f32>> {
+        &mut self.weights
+    }
+
     /// return a vector of the bias matrices of the ANN
     pub fn get_biases(&self) -> &[DVector<f32>] {
         &self.biases
     }
+
+    /// return a vector of the bias matrices of the ANN
+    pub fn get_biases_mut(&mut self) -> &mut Vec<DVector<f32>> {
+        &mut self.biases
+    }
 }
 
 // calculate elementwise sigmoid function
-fn sigmoid(arr: DVector<f32>) -> DVector<f32> {
+pub fn sigmoid(arr: &DVector<f32>) -> DVector<f32> {
     let mut sig = arr.clone();
     for elem in sig.iter_mut() {
         *elem = 1.0 / (1.0 + (elem).exp());
