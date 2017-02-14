@@ -75,7 +75,8 @@ impl Network {
     pub fn feedforward(&self, a: &DVector<f32>) -> DVector<f32> {
         let mut act = a.clone();
         for (weight, bias) in self.weights.iter().zip(self.biases.clone().into_iter()) {
-            act = sigmoid(&(weight * a + bias));
+            let t = weight * a;
+            act = sigmoid(&(t + bias));
         }
         act
     }

@@ -110,7 +110,7 @@ fn backprop(nn: &mut Network,
     }
 
     // backward pass
-    let mut delta = cost_derivative(&activations[activations.len()], desired_output) *
+    let mut delta = cost_derivative(&activations[activations.len()-1], desired_output) *
                     sigmoid_prime(&zs[zs.len() - 1]);
     let nabla_b_len = nabla_b.len() - 1;
     let nabla_w_len = nabla_w.len() - 1;
@@ -119,7 +119,7 @@ fn backprop(nn: &mut Network,
     nabla_w[nabla_w_len] = (&nabla_b[nabla_b_len]).outer(&activations[activations.len() - 2]);
 
     //TODO: Verify if we need to iterate only to ...len()-1 because of input layer
-    for l in 2..nn.get_layers().len() {
+    for l in 2..nn.get_weights().len() {
         let z = &zs[zs.len() - l];
         let sp = sigmoid_prime(&z);
         //TODO: Verify that this line does what it's supposed to

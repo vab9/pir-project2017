@@ -12,6 +12,7 @@ use input::{read, commands};
 use std::env;
 use structs::{Data};
 
+const T_SIZE: usize = 0;
 
 
 fn main() {
@@ -36,12 +37,12 @@ fn main() {
     info!("{:?} {:?}", config, subcom);
 
     let mut training_data: Vec<Data> = Vec::with_capacity(input.len()-30);
-    for i in 0..input.len()-30 {
+    for i in 0..input.len()-T_SIZE {
         training_data.push(structs::Data::from_flower(input[i]));
     }
 
     let mut test_data: Vec<Data> = Vec::with_capacity(30);;
-    for i in input.len()-30..input.len() {
+    for i in input.len()-T_SIZE..input.len() {
         test_data.push(structs::Data::from_flower(input[i]));
     }
 
@@ -50,6 +51,8 @@ fn main() {
 //          FlowerName::declassify(*m.get_class()).unwrap());
 
     // just dummy nn for no warnings
+
+    info!("hi Network");
     let mut nn = nn::Network::new(vec![4, 40, 3]).unwrap();
 
 
