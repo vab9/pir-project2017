@@ -15,11 +15,11 @@ const MAX_LOG_FILES: usize = 10;
 ///
 /// It can be used with the macros in the log crate. The resulting log files can
 /// be found in the logs subdirectory.
-pub fn init_logger() {
+pub fn init_logger(verbosity: log::LogLevelFilter) {
 
     // remove old logs if the amount of logs in log directory exceeds MAX_LOG_FILES
     if let Err(e) = clean_logs() {
-        panic!("Error: {} ... exiting!", e);
+        panic!("Error trying to clean logs: {} ... exiting!", e);
     }
 
     // get the log directory path
@@ -39,15 +39,19 @@ pub fn init_logger() {
     // output is in the following format: [timestamp] [loglevel] message
     let logger_config = fern::DispatchConfig {
         format: Box::new(|msg: &str, level: &log::LogLevel, _location: &log::LogLocation| {
-            format!("[{}] [{}] {}", time::now().rfc3339(), level, msg)
+            format!("[{}] [{}] {}",
+                    time::now().strftime("%H:%M:%S").unwrap(),
+                    level,
+                    msg)
         }),
         // set the output file
         output: vec![fern::OutputConfig::stdout(), fern::OutputConfig::file(&logfile_path)],
+        // set the max log level (see below)
         level: log::LogLevelFilter::Trace,
     };
 
-    // try to initialize the logger
-    if let Err(e) = fern::init_global_logger(logger_config, log::LogLevelFilter::Trace) {
+    // try to initialize the logger, setting the actual log level given during command parsing
+    if let Err(e) = fern::init_global_logger(logger_config, verbosity) {
         panic!("Failed to initialize global logger: {}", e);
     }
 }
@@ -91,6 +95,7 @@ fn clean_logs() -> Result<usize, io::Error> {
 }
 
 fn get_log_dir() -> PathBuf {
+    // TODO: try to get the right directory with cargo MANIFEST environment variable
     let mut p = env::current_dir().unwrap();
     p.push(Path::new("logs/"));
     p

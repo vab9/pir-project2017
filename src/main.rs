@@ -8,7 +8,7 @@ mod structs;
 mod nn;
 mod logging;
 
-use input::{read, commands};
+use input::{read, parse_commands};
 use std::env;
 use structs::Classifier;
 use structs::flower::FlowerName;
@@ -16,13 +16,19 @@ use structs::flower::FlowerName;
 
 
 fn main() {
-    // init logger
-    logging::init_logger();
-
-    info!("starting_up");
 
     // parses commands
-    let (data, config, subcom) = commands();
+    let (data, config, subcom, verbosity) = parse_commands();
+    // init logger
+    if let Some(verbosity) = verbosity {
+        logging::init_logger(verbosity);
+    }
+
+    info!("Starting_up");
+    info!("Running with LogLevel: {:?}", verbosity);
+
+
+
 
     // gets path for data
     let path = env::current_dir().unwrap();
@@ -54,6 +60,6 @@ fn main() {
 
 
     info!("FF: {:?}",
-          nn.feedforward(na::DVector::from_element(nn.get_layers()[0] as usize, 0 as f32)));
+          nn.feedforward(na::DVector::from_element(nn.get_layers()[0] as usize, 0.0)));
     info!("ended");
 }
