@@ -1,11 +1,12 @@
 extern crate clap;
 
+use log::LogLevelFilter;
 use std::io::{self, BufReader, BufRead};
 use std::fs::File;
 use std::path::Path;
 use structs::flower::Flower;
 
-use self::clap::{Arg, App, AppSettings, SubCommand};
+use self::clap::{App, AppSettings, Arg, SubCommand};
 
 
 /// reads content of given file and returns a result with
@@ -17,11 +18,18 @@ pub fn read(filename: &Path) -> io::Result<Vec<Flower>> {
 }
 
 /// parses commands for the programm and returns a tuple of strings
-pub fn commands() -> (String, String, String) {
+pub fn parse_commands() -> (String, String, String, Option<LogLevelFilter>) {
     let matches = App::new("rustle my net")
         .subcommand(SubCommand::with_name("learn"))
         .subcommand(SubCommand::with_name("classify"))
         .setting(AppSettings::SubcommandRequiredElseHelp)
+        .arg(Arg::with_name("verbosity")
+            .long("verbosity")
+            .short("v")
+            .takes_value(true)
+            .possible_values(&["debug", "info", "error", "off"])
+            // TODO: change default to warn for production
+            .default_value("debug"))
         .arg(Arg::with_name("data")
             .long("data")
             .short("d")
@@ -33,10 +41,18 @@ pub fn commands() -> (String, String, String) {
             .takes_value(true)
             .default_value("data/iris_flowers.txt"))
         .get_matches();
-    if matches.subcommand_name().is_none() {
-        panic!("Provide at least one subcommand: learn or classify");
-    }
+
+    let verbosity = match matches.value_of("verbosity") {
+        Some("debug") => Some(LogLevelFilter::Debug),
+        Some("info") => Some(LogLevelFilter::Info),
+        Some("error") => Some(LogLevelFilter::Error),
+        Some("off") => Some(LogLevelFilter::Off),
+        _ => None,
+    };
+
+    // TODO: return a struct or a hashmap or something more elegant instead of a tuple
     (matches.value_of("data").unwrap().parse().unwrap(),
      matches.value_of("config").unwrap().parse().unwrap(),
-     matches.subcommand_name().unwrap().to_string())
+     matches.subcommand_name().unwrap().to_string(),
+     verbosity)
 }
