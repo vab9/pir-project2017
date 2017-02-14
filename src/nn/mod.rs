@@ -1,7 +1,17 @@
-use rand;
-use rand::Rng;
-use rand::distributions::normal::StandardNormal;
+extern crate serde_json;
+
+pub mod learning;
+
+use input::util;
 use na::{DMatrix, DVector, IterableMut};
+use rand;
+use rand::distributions::normal::StandardNormal;
+use rand::Rng;
+use std::fs::File;
+use std::io::{self, BufReader, BufWriter};
+use std::str;
+use structs::serialnet::SerializableNet;
+
 
 /// Artificial Neural Network
 ///
@@ -70,11 +80,12 @@ impl Network {
     }
 
     /// Feed input through network, return output layer activation level
-    pub fn feedforward(&self, mut a: DVector<f32>) -> DVector<f32> {
+    pub fn feedforward(&self, a: &DVector<f32>) -> DVector<f32> {
+        let mut act = a.clone();
         for (weight, bias) in self.weights.iter().zip(self.biases.clone().into_iter()) {
-            a = sigmoid(weight * a + bias);
+            act = sigmoid(&(weight * act + bias));
         }
-        a
+        act
     }
 
     /// return the layers used to initialize the ANN
@@ -87,14 +98,53 @@ impl Network {
         &self.weights
     }
 
+    /// return a mutable vector of the weight matrices of the ANN
+    pub fn get_weights_mut(&mut self) -> &mut Vec<DMatrix<f32>> {
+        &mut self.weights
+    }
+
     /// return a vector of the bias matrices of the ANN
     pub fn get_biases(&self) -> &[DVector<f32>] {
         &self.biases
     }
+
+    /// Saves a network state to the given filename and returns a result
+    pub fn save_to_file(self, filename: &str) -> Result<(), serde_json::Error> {
+        // wrap it in a SerializableNet
+        let serializable_net: SerializableNet = self.into();
+        // create the file
+        let f = File::create(util::get_root_dir().join("data/").join(filename)).unwrap();
+        // create a writer
+        let mut writer = BufWriter::new(f);
+        // serialize the network and return the result
+        serde_json::to_writer(&mut writer, &serializable_net)
+    }
+
+    /// Loads a network state from the given file
+    ///
+    /// Returns a result with the file or an io::Error if the specified file could
+    /// not be opened
+    pub fn from_file(filename: &str) -> Result<Self, io::Error> {
+        // attempt to open the file
+        let f = File::open(util::get_root_dir().join("data/").join(filename))?;
+        let reader = BufReader::new(f);
+        // read the SerializableNet from the file
+        // we use unwrap here b/c if the file exists then we want the program to panic
+        // if we cannot read from it
+        let my_net: SerializableNet = serde_json::from_reader(reader)
+            .expect("Could not parse Network from File");
+        // convert into a Network and return it
+        Ok(my_net.into())
+    }
+
+    /// return a vector of the bias matrices of the ANN
+    pub fn get_biases_mut(&mut self) -> &mut Vec<DVector<f32>> {
+        &mut self.biases
+    }
 }
 
 // calculate elementwise sigmoid function
-fn sigmoid(arr: DVector<f32>) -> DVector<f32> {
+pub fn sigmoid(arr: &DVector<f32>) -> DVector<f32> {
     let mut sig = arr.clone();
     for elem in sig.iter_mut() {
         *elem = 1.0 / (1.0 + (elem).exp());
@@ -102,12 +152,34 @@ fn sigmoid(arr: DVector<f32>) -> DVector<f32> {
     sig
 }
 
+impl From<SerializableNet> for Network {
+    fn from(ser_net: SerializableNet) -> Self {
+
+        let mut weights: Vec<DMatrix<f32>> = Vec::new();
+        for v in ser_net.weights {
+            let (nrows, ncols) = (v.0, v.1);
+            weights.push(DMatrix::from_column_vector(nrows, ncols, &v.2))
+        }
+
+        let mut biases: Vec<DVector<f32>> = Vec::new();
+        for v in ser_net.biases {
+            biases.push(DVector::from_slice(v.len(), &v))
+        }
+
+        Network {
+            layers: ser_net.layers,
+            weights: weights,
+            biases: biases,
+        }
+    }
+}
+
 
 #[test]
 fn test_sigmoid() {
     let mut arr_orig = DVector::from_element(3, 1.0f32);
     arr_orig[2] = 2.4137;
-    let arr = sigmoid(arr_orig);
+    let arr = sigmoid(&arr_orig);
     assert_eq!(arr[0], arr[1]);
     assert_eq!(arr[0], 0.26894142137f32);
     assert_eq!(0.082133951f32, arr[2]);

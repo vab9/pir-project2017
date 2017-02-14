@@ -1,4 +1,3 @@
-
 use structs::Classifier;
 use std::fmt;
 use na::DVector;

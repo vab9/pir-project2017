@@ -1,65 +1,81 @@
 extern crate rand;
+extern crate nalgebra as na;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde;
 #[macro_use]
 extern crate log;
-extern crate nalgebra as na;
-
 mod input;
 mod structs;
 mod nn;
 mod logging;
 
-use input::{read, parse_commands};
-use std::env;
-use structs::Classifier;
-use structs::flower::FlowerName;
 
+use input::parse_commands;
+use nn::Network;
+use std::env;
+use structs::Data;
+
+// number of data sets used for evaluation purposes only
+const TEST_DATA_SIZE: usize = 30;
 
 
 fn main() {
 
     // parses commands
     let (data, config, subcom, verbosity) = parse_commands();
+
+    use rand::{self, Rng};
+
     // init logger
     if let Some(verbosity) = verbosity {
         logging::init_logger(verbosity);
     }
 
-    info!("Starting_up");
-    info!("Running with LogLevel: {:?}", verbosity);
+    info!("Starting_up...");
+    info!("Running with Loging Level: {:?}", verbosity);
+
+    // we got the input data from the parse_commands() invocation above
+    let mut input = data.unwrap();
+
+    info!("config: {:?}", config);
+    info!("subcommand: {:?}", subcom);
+
+    // init RNG
+    let mut rng = rand::thread_rng();
+    rng.shuffle(&mut input);
+
+    // split into training and test data
+    let mut training_data: Vec<Data> = Vec::with_capacity(input.len() - 30);
+    for i in 0..input.len() - TEST_DATA_SIZE {
+        training_data.push(structs::Data::from_flower(input[i]));
+    }
+
+    let mut test_data: Vec<Data> = Vec::with_capacity(30);
+    for i in input.len() - TEST_DATA_SIZE..input.len() {
+        test_data.push(structs::Data::from_flower(input[i]));
+    }
+
+    info!("Initialising network...");
+
+    // create the network
+    let mut nn = nn::Network::new(vec![4, 30, 3]).unwrap();
+    // learn!
+    nn::learning::sgd(&mut nn, training_data, 30000, 70, 0.15, test_data);
+
+    // ========================================================
+    // CODE SHOWING HOW SERIALIZATION WORKS
+    // ========================================================
+    let state_file_name = "state1.json";
+    nn.save_to_file(state_file_name).unwrap();
+    info!("Saved a neural network state to file: {}", state_file_name);
+    info!("=====================================");
+
+    let loaded_nn = Network::from_file("state1.json");
+    info!("Loaded Neural Network from file: {}", state_file_name);
+    info!("{:?}", loaded_nn);
+    info!("=====================================");
+    info!("...terminated!");
 
 
-
-
-    // gets path for data
-    let path = env::current_dir().unwrap();
-    let filename = path.join(data);
-
-    // tries to open the file
-    let input = match read(&filename) {
-        Ok(s) => s,
-        Err(e) => panic!("paniced at read input: {:?}", e),
-    };
-
-    info!("{:?} {:?}", config, subcom);
-
-
-    let m = structs::Data::from_flower(input[0]);
-
-    info!("{:?} {:?}",
-          m.get_input(),
-          FlowerName::declassify(*m.get_class()).unwrap());
-
-    // just dummy nn for no warnings
-    let nn = nn::Network::new(vec![4, 20, 3]).unwrap();
-
-    // dummy print for no warnings
-    info!("{} {} {}",
-          nn.get_layers().len(),
-          nn.get_weights().len(),
-          nn.get_biases().len());
-
-
-    info!("FF: {:?}",
-          nn.feedforward(na::DVector::from_element(nn.get_layers()[0] as usize, 0.0)));
-    info!("ended");
 }
