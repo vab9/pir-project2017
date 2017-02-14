@@ -1,7 +1,7 @@
 use structs::Data;
 use nn::Network;
 use na::{DVector, DMatrix, Iterable, Transpose};
-use std::cmp::Ordering;
+
 
 /// Stochastic Gradient Descent. If `test_data` is empty there will
 /// be no validation. `Eta` is the learning rate.
@@ -20,12 +20,12 @@ pub fn sgd(mut nn: &mut Network,
             update_mini_batch(&mut nn, &mut mini_batch, eta);
         }
         if test_data.len() > 0 {
-            println!("Epoch {}: {}/{}",
-                     j + 1,
-                     evaluate(&nn, &test_data),
-                     test_data.len());
+            debug!("Epoch {}: {}/{}",
+                   j + 1,
+                   evaluate(&nn, &test_data),
+                   test_data.len());
         } else {
-            println!("Epoch {} complete!", j + 1);
+            debug!("Epoch {} complete!", j + 1);
         }
     }
 }
@@ -77,7 +77,7 @@ fn backprop(nn: &mut Network,
             data: &DVector<f32>,
             desired_output: &DVector<f32>)
             -> (Vec<DVector<f32>>, Vec<DMatrix<f32>>) {
-    use na::{Outer};
+    use na::Outer;
     use nn;
 
     // Hold the changes calculated for this training data
@@ -118,23 +118,24 @@ fn backprop(nn: &mut Network,
     // calculate values for output layer first (hence backpropagation)
     // delta is a measurement for the error of the last layer's output
     // compared to the desired output, we will derive the nabla values from this
-    let mut delta = cost_derivative(&activations[activations.len()-1], desired_output) *
+    let mut delta = cost_derivative(&activations[activations.len() - 1], desired_output) *
                     sigmoid_prime(&zs[zs.len() - 1]);
     // need to store these because ownership issues
     let nabla_b_len = nabla_b.len();
     let nabla_w_len = nabla_w.len();
     // TODO: Remove clone
-    nabla_b[nabla_b_len-1] = delta.clone();
-    nabla_w[nabla_w_len-1] = (&nabla_b[nabla_b_len-1]).outer(&activations[activations.len() - 2]);
+    nabla_b[nabla_b_len - 1] = delta.clone();
+    nabla_w[nabla_w_len - 1] = (&nabla_b[nabla_b_len - 1])
+        .outer(&activations[activations.len() - 2]);
 
     // now calculate the values for all previous layers going from second to last to first layer
     // note: get_weiths is used for measurement of number of layers with biases and weights to
     // make sure the input layer is ignored
-    for l in 2..nn.get_weights().len()+1 {
+    for l in 2..nn.get_weights().len() + 1 {
         let z = &zs[zs.len() - l];
         let sp = sigmoid_prime(&z);
         //TODO: Verify that this line does what it's supposed to
-        delta =  &nn.get_weights()[nn.get_weights().len() - l + 1].transpose() * &delta * sp;
+        delta = &nn.get_weights()[nn.get_weights().len() - l + 1].transpose() * &delta * sp;
         nabla_b[nabla_b_len - l] = delta.clone();
         nabla_w[nabla_w_len - l] = (&delta).outer(&activations[activations.len() - l - 1]);
     }
@@ -166,12 +167,11 @@ fn evaluate(nn: &Network, test_data: &Vec<Data>) -> u8 {
     // iterate over test data input vectors and test data class vectors
     for (x, y) in test_data.iter()
         .map(|x| x.get_input())
-        .zip(test_data
-             .iter()
-             .map(|x| x.get_class_vector())) {
+        .zip(test_data.iter()
+            .map(|x| x.get_class_vector())) {
         //TODO: Shitty performance yo
         if find_max(&nn.feedforward(x)) == find_max(&y) {
-            corr+=1;
+            corr += 1;
         }
     }
     corr
@@ -181,31 +181,8 @@ fn evaluate(nn: &Network, test_data: &Vec<Data>) -> u8 {
 // returns the index of the highest value in the vector
 fn find_max(vec: &DVector<f32>) -> usize {
     vec.iter()
-        .map(|x| NonNan::new((*x).clone()).unwrap())
         .enumerate()
-        .max_by_key(|&(_, ref item)| item.clone())
+        .max_by(|tuple1, tuple2| tuple1.1.partial_cmp(tuple2.1).unwrap())
         .unwrap()
         .0
-}
-
-// f32-Type that will not hold a NaN-Value and implements total Ordering
-#[derive(Clone, PartialEq,PartialOrd)]
-struct NonNan(f32);
-
-impl NonNan {
-    fn new(val: f32) -> Option<NonNan> {
-        if val.is_nan() {
-            None
-        } else {
-            Some(NonNan(val))
-        }
-    }
-}
-
-impl Eq for NonNan {}
-
-impl Ord for NonNan {
-    fn cmp(&self, other: &NonNan) -> Ordering {
-        self.partial_cmp(other).unwrap()
-    }
 }

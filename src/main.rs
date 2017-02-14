@@ -59,7 +59,7 @@ fn main() {
     // create the network
     let mut nn = nn::Network::new(vec![4, 30, 3]).unwrap();
     // learn!
-    nn::learning::sgd(&mut nn, training_data, 10, 70, 0.15, test_data);
+    nn::learning::sgd(&mut nn, training_data, 100, 70, 0.15, test_data);
 
     // ========================================================
     // CODE SHOWING HOW SERIALIZATION WORKS
