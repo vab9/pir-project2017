@@ -38,6 +38,17 @@ impl Data {
     }
 }
 
+/// Struct used as container for serializing network state
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Net {
+    /// a Vec hat contains the networks layers
+    pub layers: Vec<u8>,
+    /// a Vec that contains the weights of the respective layer
+    pub weights: Vec<(usize, usize, Vec<f32>)>,
+    /// a Vec cointaining the biases of the respective layer
+    pub biases: Vec<Vec<f32>>,
+}
+
 /// trait that is used to classify or declassify
 pub trait Classifier {
     fn classify(&self) -> u8;

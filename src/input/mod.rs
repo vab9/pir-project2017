@@ -39,7 +39,7 @@ pub fn parse_commands() -> (String, String, String, Option<LogLevelFilter>) {
             .long("config")
             .short("c")
             .takes_value(true)
-            .default_value("data/iris_flowers.txt"))
+            .default_value("data/config.json"))
         .get_matches();
 
     let verbosity = match matches.value_of("verbosity") {

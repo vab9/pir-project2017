@@ -1,8 +1,11 @@
 extern crate rand;
+extern crate nalgebra as na;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde;
+extern crate serde_json;
 #[macro_use]
 extern crate log;
-extern crate nalgebra as na;
-
 mod input;
 mod structs;
 mod nn;
@@ -58,8 +61,18 @@ fn main() {
           nn.get_weights().len(),
           nn.get_biases().len());
 
-
     info!("FF: {:?}",
+
           nn.feedforward(na::DVector::from_element(nn.get_layers()[0] as usize, 0.0)));
     info!("ended");
+    nn.serialize(&path.join(&config));
+
+    let tt = match nn::Network::deserialize(&path.join(&config)) {
+        Ok(val) => val,
+        Err(e) => {
+            println!("{:?}", e);
+            return;
+        }
+    };
+    tt.get_layers();
 }
