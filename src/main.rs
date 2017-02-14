@@ -8,7 +8,7 @@ mod structs;
 mod nn;
 mod logging;
 
-use input::{read, parse_commands};
+use input::{read_flowers, parse_commands};
 use std::env;
 use structs::Classifier;
 use structs::flower::FlowerName;
@@ -35,10 +35,12 @@ fn main() {
     let filename = path.join(data);
 
     // tries to open the file
-    let input = match read(&filename) {
+    let input = match read_flowers(&filename) {
         Ok(s) => s,
         Err(e) => panic!("paniced at read input: {:?}", e),
     };
+
+    let () = input;
 
     info!("{:?} {:?}", config, subcom);
 
