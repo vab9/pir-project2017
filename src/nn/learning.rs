@@ -9,7 +9,7 @@ pub fn sgd(mut nn: &mut Network,
            epochs: u8,
            mini_batch_size: u8,
            eta: f32,
-           mut test_data: Vec<Data>) {
+           test_data: Vec<Data>) {
     use rand::{self, Rng};
     let mut rng = rand::thread_rng();
 
@@ -29,7 +29,7 @@ pub fn sgd(mut nn: &mut Network,
     }
 }
 
-fn update_mini_batch(mut nn: &mut Network, mut mini_batch: &mut [Data], eta: f32) {
+fn update_mini_batch(mut nn: &mut Network, mini_batch: &mut [Data], eta: f32) {
     // holds all biases of the network
     let mut nabla_b: Vec<DVector<f32>> = Vec::with_capacity(nn.get_biases().len());
     for biases in nn.get_biases() {
@@ -73,7 +73,7 @@ fn backprop(nn: &mut Network,
             data: &DVector<f32>,
             desired_output: &DVector<f32>)
             -> (Vec<DVector<f32>>, Vec<DMatrix<f32>>) {
-    use na::{self, Dot, Outer};
+    use na::{Outer};
     use nn;
 
     // holds all biases of the network
@@ -148,37 +148,32 @@ fn sigmoid_prime(z: &DVector<f32>) -> DVector<f32> {
 }
 
 fn evaluate(nn: &Network, test_data: &Vec<Data>) -> u8 {
+    let mut corr = 0;
     for (x, y) in test_data.iter().map(|x| x.get_input()).zip(test_data.iter().map(|x| x.get_class_vector())) {
-
-
+        //TODO: Shitty performance yo
+        if find_max(&nn.feedforward(x)) == find_max(&y) {
+            corr+=1;
+        }
     }
-    unimplemented!();
+    corr
 }
 
-/*
-    def evaluate(self, test_data):
-        """Return the number of test inputs for which the neural
-        network outputs the correct result. Note that the neural
-        network's output is assumed to be the index of whichever
-        neuron in the final layer has the highest activation."""
-        test_results = [(np.argmax(self.feedforward(x)), y)
-                        for (x, y) in test_data]
-        return sum(int(x == y) for (x, y) in test_results)*/
 
 
+fn find_max(vec: &DVector<f32>) -> usize {
+    //let mut res: Vec<usize> = Vec::with_capacity(vec.len());
 
-fn find_max(vec: &Vec<DVector<f32>>) -> Vec<usize> {
-    let mut res: Vec<usize> = Vec::with_capacity(vec.len());
+    //for dvec in vec {
+    vec.iter()
+        .map(|x| NonNan::new((*x).clone()).unwrap())
+        .enumerate()
+        .max_by_key(|&(_, ref item)| item.clone())
+        .unwrap()
+        .0
+    //res.push(max.unwrap().0);
+    //}
 
-    for dvec in vec {
-        let mut max = dvec.iter()
-            .map(|x| NonNan::new((*x).clone()).unwrap())
-            .enumerate()
-            .max_by_key(|&(_, ref item)| item.clone());
-        res.push(max.unwrap().0);
-    }
 
-    res
 }
 
 

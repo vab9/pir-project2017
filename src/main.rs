@@ -10,8 +10,7 @@ mod logging;
 
 use input::{read, commands};
 use std::env;
-use structs::Classifier;
-use structs::flower::FlowerName;
+use structs::{Data};
 
 
 
@@ -36,16 +35,27 @@ fn main() {
 
     info!("{:?} {:?}", config, subcom);
 
+    let mut training_data: Vec<Data> = Vec::with_capacity(input.len()-30);
+    for i in 0..input.len()-30 {
+        training_data.push(structs::Data::from_flower(input[i]));
+    }
 
-    let m = structs::Data::from_flower(input[0]);
+    let mut test_data: Vec<Data> = Vec::with_capacity(30);;
+    for i in input.len()-30..input.len() {
+        test_data.push(structs::Data::from_flower(input[i]));
+    }
 
-    info!("{:?} {:?}",
-          m.get_input(),
-          FlowerName::declassify(*m.get_class()).unwrap());
+//    info!("{:?} {:?}",
+//          m.get_input(),
+//          FlowerName::declassify(*m.get_class()).unwrap());
 
     // just dummy nn for no warnings
-    let nn = nn::Network::new(vec![4, 20, 3]).unwrap();
+    let mut nn = nn::Network::new(vec![4, 40, 3]).unwrap();
 
+
+    nn::learning::sgd(&mut nn, training_data, 50, 10, 0.15, test_data);
+
+/*
     // dummy print for no warnings
     info!("{} {} {}",
           nn.get_layers().len(),
@@ -54,6 +64,7 @@ fn main() {
 
 
     info!("FF: {:?}",
-          nn.feedforward(na::DVector::from_element(nn.get_layers()[0] as usize, 0 as f32)));
+          nn.feedforward(na::DVector::from_element(nn.get_layers()[0] as usize, 0 as f32)));*/
     info!("ended");
+
 }

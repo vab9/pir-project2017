@@ -1,4 +1,4 @@
-mod learning;
+pub mod learning;
 
 use rand;
 use rand::Rng;
@@ -72,11 +72,12 @@ impl Network {
     }
 
     /// Feed input through network, return output layer activation level
-    pub fn feedforward(&self, mut a: DVector<f32>) -> DVector<f32> {
+    pub fn feedforward(&self, a: &DVector<f32>) -> DVector<f32> {
+        let mut act = a.clone();
         for (weight, bias) in self.weights.iter().zip(self.biases.clone().into_iter()) {
-            a = sigmoid(&(weight * a + bias));
+            act = sigmoid(&(weight * a + bias));
         }
-        a
+        act
     }
 
     /// return the layers used to initialize the ANN
