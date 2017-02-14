@@ -3,7 +3,8 @@ use nn::Network;
 use na::{DVector, DMatrix, Iterable, Transpose};
 use std::cmp::Ordering;
 
-/// Impl
+/// Stochastic Gradient Descent. If `test_data` is empty there will
+/// be no validation. `Eta` is the learning rate.
 pub fn sgd(mut nn: &mut Network,
            mut training_data: Vec<Data>,
            epochs: u16,
@@ -15,6 +16,7 @@ pub fn sgd(mut nn: &mut Network,
     for j in 0..epochs {
         rng.shuffle(&mut training_data);
         for mut mini_batch in training_data.chunks_mut(mini_batch_size as usize) {
+            // all the learning happens there:
             update_mini_batch(&mut nn, &mut mini_batch, eta);
         }
         if test_data.len() > 0 {
@@ -28,19 +30,21 @@ pub fn sgd(mut nn: &mut Network,
     }
 }
 
-///updates the Network with a mini batch
+// updates the Network with a mini batch of training data
 fn update_mini_batch(mut nn: &mut Network, mini_batch: &mut [Data], eta: f32) {
-    // holds all biases of the network
+    // nabla_b holds changes for biases in the network. Initialise with zeros because
+    // the changes will later on be summed up in this vector
     let mut nabla_b: Vec<DVector<f32>> = Vec::with_capacity(nn.get_biases().len());
     for biases in nn.get_biases() {
-        nabla_b.push(DVector::from_element(biases.len(), 0.0f32));
+        nabla_b.push(DVector::new_zeros(biases.len()));
     }
-    // holds all weights of the network
+    // holds changes for weights in the network, similar to biases
     let mut nabla_w: Vec<DMatrix<f32>> = Vec::with_capacity(nn.get_weights().len());
     for weights in nn.get_weights() {
-        nabla_w.push(DMatrix::from_element(weights.nrows(), weights.ncols(), 0.0f32));
+        nabla_w.push(DMatrix::new_zeros(weights.nrows(), weights.ncols()));
     }
 
+    // necessary because we can't access mini_batch_len later on
     let mini_batch_len = mini_batch.len();
 
     // for each dataset in mini_batch: calculate gradients, add to nablas
@@ -48,19 +52,19 @@ fn update_mini_batch(mut nn: &mut Network, mini_batch: &mut [Data], eta: f32) {
         let (delta_nabla_b, delta_nabla_w) =
             backprop(&mut nn, data.get_input(), data.get_class_vector());
         for (mut nb, dnb) in nabla_b.iter_mut().zip(delta_nabla_b.iter()) {
-            // TODO: This is really not good. Someone needs to fix this.
+            // TODO: Remove clone (seriously)
             *nb += dnb.clone();
         }
         for (mut nw, dnw) in nabla_w.iter_mut().zip(delta_nabla_w.iter()) {
-            // TODO: Same as above.
+            // TODO: Remove clone
             *nw += dnw.clone();
         }
     }
 
+    // Update the actual weights and biases
     for (mut w, nw) in nn.get_weights_mut().iter_mut().zip(nabla_w.iter()) {
         *w -= eta / (mini_batch_len as f32) * nw.clone();
     }
-
 
     for (mut b, nb) in nn.get_biases_mut().iter_mut().zip(nabla_b.iter()) {
         *b -= eta / (mini_batch_len as f32) * nb.clone();
@@ -68,7 +72,7 @@ fn update_mini_batch(mut nn: &mut Network, mini_batch: &mut [Data], eta: f32) {
 }
 
 
-/// Gets the desired changes in weights and biases for one training example
+// Gets the desired changes in weights and biases for one training example
 fn backprop(nn: &mut Network,
             data: &DVector<f32>,
             desired_output: &DVector<f32>)
@@ -76,12 +80,11 @@ fn backprop(nn: &mut Network,
     use na::{Outer};
     use nn;
 
-    // holds all biases of the network
+    // Hold the changes calculated for this training data
     let mut nabla_b: Vec<DVector<f32>> = Vec::with_capacity(nn.get_biases().len());
     for biases in nn.get_biases() {
         nabla_b.push(DVector::new_zeros(biases.len()));
     }
-    // holds all weights of the network
     let mut nabla_w: Vec<DMatrix<f32>> = Vec::with_capacity(nn.get_weights().len());
     for weights in nn.get_weights() {
         nabla_w.push(DMatrix::new_zeros(weights.nrows(), weights.ncols()));
@@ -94,11 +97,12 @@ fn backprop(nn: &mut Network,
     // still be a performance issue since we call this once per training data.
     let mut activation = data.clone();
 
-    // hold all activation layers (including output)
+    // holds activation levels all for layers (including output)
     let mut activations: Vec<DVector<f32>> = Vec::with_capacity(nn.get_layers().len());
-    // hold z where z is the input of the sigmoid function for each layer
+    // hold z for each layer where z is the input vector of the sigmoid function
     let mut zs: Vec<DVector<f32>> = Vec::with_capacity(nn.get_layers().len());
 
+    // note that this pushes the input activations
     activations.push(activation);
     // execute feedforward
     for (biases, weights) in nn.get_biases().iter().zip(nn.get_weights().iter()) {
@@ -110,15 +114,22 @@ fn backprop(nn: &mut Network,
     }
 
     // backward pass
+
+    // calculate values for output layer first (hence backpropagation)
+    // delta is a measurement for the error of the last layer's output
+    // compared to the desired output, we will derive the nabla values from this
     let mut delta = cost_derivative(&activations[activations.len()-1], desired_output) *
                     sigmoid_prime(&zs[zs.len() - 1]);
+    // need to store these because ownership issues
     let nabla_b_len = nabla_b.len();
     let nabla_w_len = nabla_w.len();
     // TODO: Remove clone
     nabla_b[nabla_b_len-1] = delta.clone();
     nabla_w[nabla_w_len-1] = (&nabla_b[nabla_b_len-1]).outer(&activations[activations.len() - 2]);
 
-    //TODO: Verify if we need to iterate only to ...len()-1 because of input layer
+    // now calculate the values for all previous layers going from second to last to first layer
+    // note: get_weiths is used for measurement of number of layers with biases and weights to
+    // make sure the input layer is ignored
     for l in 2..nn.get_weights().len()+1 {
         let z = &zs[zs.len() - l];
         let sp = sigmoid_prime(&z);
@@ -130,7 +141,7 @@ fn backprop(nn: &mut Network,
     (nabla_b, nabla_w)
 }
 
-/// Derivative of the cost function
+// Derivative of the cost function
 fn cost_derivative(output_activations: &DVector<f32>,
                    desired_output: &DVector<f32>)
                    -> DVector<f32> {
@@ -140,18 +151,24 @@ fn cost_derivative(output_activations: &DVector<f32>,
 }
 
 
-/// Derivative of the sigmoid function
+// Derivative of the sigmoid function
 fn sigmoid_prime(z: &DVector<f32>) -> DVector<f32> {
     use nn;
     // Derivative of sigmoid function, ask wolfram alpha if you don't believe me
     nn::sigmoid(z) * (1.0f32 - nn::sigmoid(z))
 }
 
-///compares the output of the Network with the test_data
-///returns the number of correct results
+// compares the output of the Network with the test_data
+// returns the number of correct results
 fn evaluate(nn: &Network, test_data: &Vec<Data>) -> u8 {
+    // corr holds number of correctly recognised training data sets
     let mut corr = 0;
-    for (x, y) in test_data.iter().map(|x| x.get_input()).zip(test_data.iter().map(|x| x.get_class_vector())) {
+    // iterate over test data input vectors and test data class vectors
+    for (x, y) in test_data.iter()
+        .map(|x| x.get_input())
+        .zip(test_data
+             .iter()
+             .map(|x| x.get_class_vector())) {
         //TODO: Shitty performance yo
         if find_max(&nn.feedforward(x)) == find_max(&y) {
             corr+=1;
@@ -161,7 +178,7 @@ fn evaluate(nn: &Network, test_data: &Vec<Data>) -> u8 {
 }
 
 
-///returns the index of the highest value in the vector
+// returns the index of the highest value in the vector
 fn find_max(vec: &DVector<f32>) -> usize {
     vec.iter()
         .map(|x| NonNan::new((*x).clone()).unwrap())
@@ -171,7 +188,7 @@ fn find_max(vec: &DVector<f32>) -> usize {
         .0
 }
 
-
+// f32-Type that will not hold a NaN-Value and implements total Ordering
 #[derive(Clone, PartialEq,PartialOrd)]
 struct NonNan(f32);
 

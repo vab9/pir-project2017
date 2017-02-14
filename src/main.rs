@@ -12,8 +12,8 @@ use input::parse_commands;
 use std::env;
 use structs::Data;
 
-
-const T_SIZE: usize = 30;
+// number of data sets used for evaluation purposes only
+const TEST_DATA_SIZE: usize = 30;
 
 
 fn main() {
@@ -43,21 +43,21 @@ fn main() {
 
     // split into training and test data
     let mut training_data: Vec<Data> = Vec::with_capacity(input.len() - 30);
-    for i in 0..input.len() - T_SIZE {
+    for i in 0..input.len() - TEST_DATA_SIZE {
         training_data.push(structs::Data::from_flower(input[i]));
     }
 
     let mut test_data: Vec<Data> = Vec::with_capacity(30);
-    for i in input.len() - T_SIZE..input.len() {
+    for i in input.len() - TEST_DATA_SIZE..input.len() {
         test_data.push(structs::Data::from_flower(input[i]));
     }
 
-    // just dummy nn for no warnings
-    info!("hi Network");
-    let mut nn = nn::Network::new(vec![4, 60, 3]).unwrap();
+    info!("Initialising network");
 
+    // create the network
+    let mut nn = nn::Network::new(vec![4, 30, 3]).unwrap();
+    // learn!
     nn::learning::sgd(&mut nn, training_data, 30000, 70, 0.15, test_data);
-    // nn.feedforward(na::DVector::from_element(nn.get_layers()[0] as usize, 0.0)));
 
     info!("...terminated!");
 
