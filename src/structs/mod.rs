@@ -5,6 +5,7 @@ use na::DVector;
 use std::io;
 
 /// Struct for u8
+#[derive(Clone)]
 pub struct Data {
     /// class for the NN (Result)
     class: u8,
