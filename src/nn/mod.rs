@@ -98,28 +98,37 @@ impl Network {
     pub fn get_biases(&self) -> &[DVector<f32>] {
         &self.biases
     }
+
+    /// serializes the networks curent state as json in the given file
     pub fn serialize(&self, filename: &Path) {
         let mut b = Vec::new();
         let biases = self.biases.clone();
+        // parses `Vec<DVector<f32>>` into `Vec<Vec<f32>>`
+        // for usability of json_derive
         for bias in biases {
             b.push(
                 bias.at
             );
         }
+
         let mut w = Vec::new();
         let weights = self.weights.clone();
+        // parses `Vec<DMatrix<f32>>` into `Vec<(usize, usize, Vec<f32>)>`
+        // for usability of json_derive
         for weight in weights {
             w.push(
                 (weight.nrows(), weight.ncols(), weight.as_vector().to_vec())
             );
         }
 
+        // container for network data
         let t = Net {
             layers: self.layers.clone(),
             weights: w,
             biases: b,
-
         };
+
+        // parses struct into string of json format
         let j = match serde_json::to_string(&t) {
             Ok(val) => val,
             Err(e) => {
@@ -127,18 +136,22 @@ impl Network {
                     return;
             },
         };
+
+        // writes data into given file
         let f = File::create(filename).expect("Unable to create file");
         let mut f = BufWriter::new(f);
         f.write_all(j.as_bytes()).expect("Unable to write data");
-
     }
 
+    /// returns the deserialized network state out of the given file
     pub fn deserialize(filename: &Path) -> Result<Network, &'static str> {
+        // reads state from file into string
         let mut data = String::new();
         let f = File::open(filename).expect("Unable to open file");
         let mut br = BufReader::new(f);
         br.read_to_string(&mut data).expect("Unable to read string");
 
+        // parses string into network container
         let t: Net = match serde_json::from_str(&data) {
             Ok(val) => val,
             Err(e) => {
@@ -146,18 +159,23 @@ impl Network {
                 return Err("failed to deserialise network");
             },
         };
+
+        // parses `Vec<(usize, usize, Vec<f32>)>` into `Dmatrix<f32>`
         let mut w = Vec::new();
         for weight in t.weights {
             w.push(
                 DMatrix::from_column_vector(weight.0,weight.1,&weight.2)
                 );
         }
+
+        // parses `Vec<Vec<f32>>` into `Vec<DVector<f32>>`
         let mut b = Vec::new();
         for bias in t.biases {
             b.push(
                 DVector::from_slice(bias.len(),&bias)
             );
         }
+
         Ok(
             Network {
                 layers: t.layers,
@@ -166,7 +184,6 @@ impl Network {
             }
         )
     }
-
 }
 
 // calculate elementwise sigmoid function
