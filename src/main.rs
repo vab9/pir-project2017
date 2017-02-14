@@ -12,10 +12,12 @@ use input::{read, commands};
 use std::env;
 use structs::{Data};
 
+
 const T_SIZE: usize = 30;
 
 
 fn main() {
+    use rand::{self, Rng};
     // init logger
     logging::init_logger();
 
@@ -29,34 +31,35 @@ fn main() {
     let filename = path.join(data);
 
     // tries to open the file
-    let input = match read(&filename) {
+    let mut input = match read(&filename) {
         Ok(s) => s,
         Err(e) => panic!("paniced at read input: {:?}", e),
     };
 
     info!("{:?} {:?}", config, subcom);
 
+
+    let mut rng = rand::thread_rng();
+    rng.shuffle(&mut input);
+
+
     let mut training_data: Vec<Data> = Vec::with_capacity(input.len()-30);
     for i in 0..input.len()-T_SIZE {
         training_data.push(structs::Data::from_flower(input[i]));
     }
 
-    let mut test_data: Vec<Data> = Vec::with_capacity(30);;
+    let mut test_data: Vec<Data> = Vec::with_capacity(30);
     for i in input.len()-T_SIZE..input.len() {
         test_data.push(structs::Data::from_flower(input[i]));
     }
 
-//    info!("{:?} {:?}",
-//          m.get_input(),
-//          FlowerName::declassify(*m.get_class()).unwrap());
-
     // just dummy nn for no warnings
 
     info!("hi Network");
-    let mut nn = nn::Network::new(vec![4, 40, 3]).unwrap();
+    let mut nn = nn::Network::new(vec![4, 60, 3]).unwrap();
 
 
-    nn::learning::sgd(&mut nn, training_data, 50, 10, 0.15, test_data);
+    nn::learning::sgd(&mut nn, training_data, 30000, 70, 0.15, test_data);
 
 /*
     // dummy print for no warnings

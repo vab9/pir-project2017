@@ -3,10 +3,10 @@ use nn::Network;
 use na::{DVector, DMatrix, Iterable, Transpose};
 use std::cmp::Ordering;
 
-
+/// Impl
 pub fn sgd(mut nn: &mut Network,
            mut training_data: Vec<Data>,
-           epochs: u8,
+           epochs: u16,
            mini_batch_size: u8,
            eta: f32,
            test_data: Vec<Data>) {
@@ -19,19 +19,16 @@ pub fn sgd(mut nn: &mut Network,
         }
         if test_data.len() > 0 {
             println!("Epoch {}: {}/{}",
-                     j,
+                     j + 1,
                      evaluate(&nn, &test_data),
                      test_data.len());
         } else {
-            println!("Epoch {} complete!", j);
+            println!("Epoch {} complete!", j + 1);
         }
-        /*for weight in nn.get_weights() {
-            println!("Weights: {:?}", weight);
-        }
-        println!("-----------------");*/
     }
 }
 
+///updates the Network with a mini batch
 fn update_mini_batch(mut nn: &mut Network, mini_batch: &mut [Data], eta: f32) {
     // holds all biases of the network
     let mut nabla_b: Vec<DVector<f32>> = Vec::with_capacity(nn.get_biases().len());
@@ -150,6 +147,8 @@ fn sigmoid_prime(z: &DVector<f32>) -> DVector<f32> {
     nn::sigmoid(z) * (1.0f32 - nn::sigmoid(z))
 }
 
+///compares the output of the Network with the test_data
+///returns the number of correct results
 fn evaluate(nn: &Network, test_data: &Vec<Data>) -> u8 {
     let mut corr = 0;
     for (x, y) in test_data.iter().map(|x| x.get_input()).zip(test_data.iter().map(|x| x.get_class_vector())) {
@@ -162,7 +161,7 @@ fn evaluate(nn: &Network, test_data: &Vec<Data>) -> u8 {
 }
 
 
-
+///returns the index of the highest value in the vector
 fn find_max(vec: &DVector<f32>) -> usize {
     vec.iter()
         .map(|x| NonNan::new((*x).clone()).unwrap())
