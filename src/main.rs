@@ -12,7 +12,7 @@ use input::{read, commands};
 use std::env;
 use structs::{Data};
 
-const T_SIZE: usize = 0;
+const T_SIZE: usize = 30;
 
 
 fn main() {

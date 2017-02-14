@@ -1,6 +1,6 @@
 use structs::Data;
 use nn::Network;
-use na::{DVector, DMatrix, Iterable};
+use na::{DVector, DMatrix, Iterable, Transpose};
 use std::cmp::Ordering;
 
 
@@ -12,7 +12,6 @@ pub fn sgd(mut nn: &mut Network,
            test_data: Vec<Data>) {
     use rand::{self, Rng};
     let mut rng = rand::thread_rng();
-
     for j in 0..epochs {
         rng.shuffle(&mut training_data);
         for mut mini_batch in training_data.chunks_mut(mini_batch_size as usize) {
@@ -26,6 +25,10 @@ pub fn sgd(mut nn: &mut Network,
         } else {
             println!("Epoch {} complete!", j);
         }
+        /*for weight in nn.get_weights() {
+            println!("Weights: {:?}", weight);
+        }
+        println!("-----------------");*/
     }
 }
 
@@ -112,18 +115,18 @@ fn backprop(nn: &mut Network,
     // backward pass
     let mut delta = cost_derivative(&activations[activations.len()-1], desired_output) *
                     sigmoid_prime(&zs[zs.len() - 1]);
-    let nabla_b_len = nabla_b.len() - 1;
-    let nabla_w_len = nabla_w.len() - 1;
+    let nabla_b_len = nabla_b.len();
+    let nabla_w_len = nabla_w.len();
     // TODO: Remove clone
-    nabla_b[nabla_b_len] = delta.clone();
-    nabla_w[nabla_w_len] = (&nabla_b[nabla_b_len]).outer(&activations[activations.len() - 2]);
+    nabla_b[nabla_b_len-1] = delta.clone();
+    nabla_w[nabla_w_len-1] = (&nabla_b[nabla_b_len-1]).outer(&activations[activations.len() - 2]);
 
     //TODO: Verify if we need to iterate only to ...len()-1 because of input layer
-    for l in 2..nn.get_weights().len() {
+    for l in 2..nn.get_weights().len()+1 {
         let z = &zs[zs.len() - l];
         let sp = sigmoid_prime(&z);
         //TODO: Verify that this line does what it's supposed to
-        delta = &nn.get_weights()[nn.get_weights().len() - l + 1] * (&delta) * sp;
+        delta =  &nn.get_weights()[nn.get_weights().len() - l + 1].transpose() * &delta * sp;
         nabla_b[nabla_b_len - l] = delta.clone();
         nabla_w[nabla_w_len - l] = (&delta).outer(&activations[activations.len() - l - 1]);
     }
@@ -161,19 +164,12 @@ fn evaluate(nn: &Network, test_data: &Vec<Data>) -> u8 {
 
 
 fn find_max(vec: &DVector<f32>) -> usize {
-    //let mut res: Vec<usize> = Vec::with_capacity(vec.len());
-
-    //for dvec in vec {
     vec.iter()
         .map(|x| NonNan::new((*x).clone()).unwrap())
         .enumerate()
         .max_by_key(|&(_, ref item)| item.clone())
         .unwrap()
         .0
-    //res.push(max.unwrap().0);
-    //}
-
-
 }
 
 
