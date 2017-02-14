@@ -1,9 +1,8 @@
 extern crate fern;
 extern crate time;
 
+use input::util;
 use log;
-
-use std::env;
 use std::ffi::OsStr;
 use std::fs;
 use std::io;
@@ -96,7 +95,7 @@ fn clean_logs() -> Result<usize, io::Error> {
 
 fn get_log_dir() -> PathBuf {
     // TODO: try to get the right directory with cargo MANIFEST environment variable
-    let mut p = env::current_dir().unwrap();
+    let mut p = util::get_root_dir();
     p.push(Path::new("logs/"));
     p
 }

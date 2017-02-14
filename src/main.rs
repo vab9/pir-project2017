@@ -3,7 +3,6 @@ extern crate nalgebra as na;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde;
-extern crate serde_json;
 #[macro_use]
 extern crate log;
 mod input;
@@ -12,10 +11,9 @@ mod nn;
 mod logging;
 
 use input::{read, parse_commands};
+use nn::Network;
 use std::env;
-use std::fs::File;
-use std::io::{BufReader, BufWriter};
-use structs::{Classifier, SerializableNet};
+use structs::Classifier;
 use structs::flower::FlowerName;
 
 
@@ -63,21 +61,8 @@ fn main() {
     // ========================================================
     // CODE SHOWING THAT SERIALIZATION WORKS
     // ========================================================
-
-    // wrap it in a SerializableNet
-    let serializable_net: SerializableNet = nn.into();
-    // serialize it
-    let f = File::create(&path.join(&config)).unwrap();
-    // new scope here b/c writer needs to be dropped before we reopen the file
-    {
-        let mut writer = BufWriter::new(f);
-        serde_json::to_writer(&mut writer, &serializable_net).unwrap();
-    }
-
-    let f = File::open(&path.join(&config)).unwrap();
-    let reader = BufReader::new(f);
-    let my_net: SerializableNet = serde_json::from_reader(reader).unwrap();
-    let new_net: nn::Network = my_net.into();
-    info!("{:?}", new_net);
+    nn.save_to_file("state1.json").unwrap();
+    let loaded_nn = Network::from_file("state1.json");
+    info!("{:?}", loaded_nn);
 
 }

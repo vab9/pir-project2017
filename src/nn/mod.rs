@@ -1,11 +1,14 @@
-use rand;
-use rand::Rng;
-use rand::distributions::normal::StandardNormal;
+extern crate serde_json;
+
+use input::util;
 use na::{DMatrix, DVector, IterableMut};
+use rand;
+use rand::distributions::normal::StandardNormal;
+use rand::Rng;
 use std::fs::File;
 use std::io::{self, BufReader, BufWriter};
 use std::str;
-use structs::SerializableNet;
+use structs::serialnet::SerializableNet;
 
 
 /// Artificial Neural Network
@@ -97,26 +100,33 @@ impl Network {
         &self.biases
     }
 
-    pub fn to_file(self) -> Result<(), io::Error> {
-        // ========================================================
-        // CODE SHOWING THAT SERIALIZATION WORKS
-        // ========================================================
-
+    /// Saves a network state to the given filename and returns a result
+    pub fn save_to_file(self, filename: &str) -> Result<(), serde_json::Error> {
         // wrap it in a SerializableNet
         let serializable_net: SerializableNet = self.into();
-        // serialize it
-        let f = File::create(&path.join(&config)).unwrap();
-        // new scope here b/c writer needs to be dropped before we reopen the file
-        {
-            let mut writer = BufWriter::new(f);
-            serde_json::to_writer(&mut writer, &serializable_net).unwrap();
-        }
+        // create the file
+        let f = File::create(util::get_root_dir().join("data/").join(filename)).unwrap();
+        // create a writer
+        let mut writer = BufWriter::new(f);
+        // serialize the network and return the result
+        serde_json::to_writer(&mut writer, &serializable_net)
+    }
 
-        let f = File::open(&path.join(&config)).unwrap();
+    /// Loads a network state from the given file
+    ///
+    /// Returns a result with the file or an io::Error if the specified file could
+    /// not be opened
+    pub fn from_file(filename: &str) -> Result<Self, io::Error> {
+        // attempt to open the file
+        let f = File::open(util::get_root_dir().join("data/").join(filename))?;
         let reader = BufReader::new(f);
-        let my_net: SerializableNet = serde_json::from_reader(reader).unwrap();
-        let new_net: nn::Network = my_net.into();
-        info!("{:?}", new_net);
+        // read the SerializableNet from the file
+        // we use unwrap here b/c if the file exists then we want the program to panic
+        // if we cannot read from it
+        let my_net: SerializableNet = serde_json::from_reader(reader)
+            .expect("Could not parse Network from File");
+        // convert into a Network and return it
+        Ok(my_net.into())
     }
 }
 
