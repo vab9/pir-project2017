@@ -94,7 +94,6 @@ fn clean_logs() -> Result<usize, io::Error> {
 }
 
 fn get_log_dir() -> PathBuf {
-    // TODO: try to get the right directory with cargo MANIFEST environment variable
     let mut p = util::get_root_dir();
     p.push(Path::new("logs/"));
     p

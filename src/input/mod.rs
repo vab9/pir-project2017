@@ -2,10 +2,11 @@ pub mod util;
 
 extern crate clap;
 
+use env;
 use log::LogLevelFilter;
-use std::io::{self, BufReader, BufRead};
 use std::fs::File;
-use std::path::Path;
+use std::io::{self, BufReader, BufRead};
+use std::path::{Path, PathBuf};
 use structs::flower::Flower;
 
 use self::clap::{App, AppSettings, Arg, SubCommand};
@@ -13,14 +14,17 @@ use self::clap::{App, AppSettings, Arg, SubCommand};
 
 /// reads content of given file and returns a result with
 /// either the Vector of Flowers or Err
-pub fn read(filename: &Path) -> io::Result<Vec<Flower>> {
+pub fn read_data(filename: &Path) -> io::Result<Vec<Flower>> {
     let f = File::open(filename)?;
     let reader = BufReader::new(&f);
     reader.lines().map(|l| l?.parse::<Flower>()).collect()
 }
 
 /// parses commands for the programm and returns a tuple of strings
-pub fn parse_commands() -> (String, String, String, Option<LogLevelFilter>) {
+pub fn parse_commands
+    ()
+    -> (Result<Vec<Flower>, io::Error>, String, String, Option<LogLevelFilter>)
+{
     let matches = App::new("rustle my net")
         .subcommand(SubCommand::with_name("learn"))
         .subcommand(SubCommand::with_name("classify"))
@@ -52,9 +56,18 @@ pub fn parse_commands() -> (String, String, String, Option<LogLevelFilter>) {
         _ => None,
     };
 
+    // TODO: remove unwrap
+    let data = parse_data(matches.value_of("data").unwrap());
+
     // TODO: return a struct or a hashmap or something more elegant instead of a tuple
-    (matches.value_of("data").unwrap().parse().unwrap(),
+    (data,
      matches.value_of("config").unwrap().parse().unwrap(),
      matches.subcommand_name().unwrap().to_string(),
      verbosity)
+}
+
+fn parse_data(datafile: &str) -> Result<Vec<Flower>, io::Error> {
+    let mut data_path = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
+    data_path.push(Path::new(datafile));
+    read_data(&data_path)
 }
