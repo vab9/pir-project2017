@@ -143,11 +143,11 @@ impl Network {
     }
 }
 
-// calculate elementwise sigmoid function
-pub fn sigmoid(arr: &DVector<f32>) -> DVector<f32> {
-    let mut sig = arr.clone();
+/// calculate elementwise sigmoid function of the `input` vector.
+pub fn sigmoid(input: &DVector<f32>) -> DVector<f32> {
+    let mut sig = input.clone();
     for elem in sig.iter_mut() {
-        *elem = 1.0 / (1.0 + (-1.0f32 * elem.clone()).exp());
+        *elem = 1.0 / (1.0 + (-1.0f32 * *elem).exp());
     }
     sig
 }
@@ -181,6 +181,6 @@ fn test_sigmoid() {
     arr_orig[2] = 2.4137;
     let arr = sigmoid(&arr_orig);
     assert_eq!(arr[0], arr[1]);
-    assert_eq!(arr[0], 0.26894142137f32);
-    assert_eq!(0.082133951f32, arr[2]);
+    assert_eq!(arr[0], 0.73105857863f32);
+    assert_eq!(arr[2], 0.91786604895f32);
 }

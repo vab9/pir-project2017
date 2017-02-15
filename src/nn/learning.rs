@@ -3,8 +3,18 @@ use nn::Network;
 use na::{DVector, DMatrix, Iterable, Transpose};
 
 
-/// Stochastic Gradient Descent. If `test_data` is empty there will
-/// be no validation. `Eta` is the learning rate.
+/// Execute Stochastic Gradient Descent on the `Network`.
+///
+/// `training_data` is the data actually used for learning and should be disjoint from the
+/// `test_data`. Epochs is the  Number of learning cycles in each of which the whole `training_data`
+/// will be cycled through in mini batches of `mini_batch_size` size. `Eta` is the learning rate.
+/// `test_data` can be empty and if it is there will be no validation of the network.
+///
+/// The weights and biases of the network will be changed according to the gradient on the Error
+/// over the mini_batch. Note that this means that the SGD does not actually calculate the gradient
+/// over the whole training data set in each cycle, instead it calculates the gradient over the mini
+/// batches and then sums those up (hence Stochastic Gradient Descent).
+
 pub fn sgd(mut nn: &mut Network,
            mut training_data: Vec<Data>,
            epochs: u32,
@@ -12,12 +22,16 @@ pub fn sgd(mut nn: &mut Network,
            eta: f32,
            test_data: Vec<Data>) {
     use rand::{self, Rng};
+
+    // Used to shuffle data
     let mut rng = rand::thread_rng();
+
+    // In each learning epoche: Shuffle the training data so that the mini batches always contain
+    // different data sets from different flowers. Then update the mini batches using SGD.
     for j in 0..epochs {
         rng.shuffle(&mut training_data);
-        // Verify
         for mut mini_batch in training_data.chunks_mut(mini_batch_size as usize) {
-            // all the learning happens there:
+            // all the actual learning happens there:
             update_mini_batch(&mut nn, &mut mini_batch, eta);
         }
         if test_data.len() > 0 {
@@ -32,48 +46,7 @@ pub fn sgd(mut nn: &mut Network,
 }
 
 
-pub fn sanitise(train: &mut Vec<Data>, test: &mut Vec<Data>) {
-    let mut max = 0.0f32;
-    for i in 0..train.len() {
-        let tmp = train[i].get_input()[find_max(train[i].get_input())];
-        if tmp > max {
-            max = tmp;
-        }
-    }
-    for i in 0..test.len() {
-        let tmp = test[i].get_input()[find_max(train[i].get_input())];
-        if tmp > max {
-            max = tmp;
-        }
-    }
-    for i in 0..train.len(){
-        *train[i].get_input_mut() *= 1.0/max;
-    }
-
-    for i in 0..test.len() {
-        *test[i].get_input_mut() *= 1.0/max;
-    }
-
-
-
-}
-
-pub fn check_san(train: &Vec<Data>, test: &Vec<Data>) {
-    for i in 0..train.len() {
-        let tmp = train[i].get_input()[find_max(train[i].get_input())];
-        if tmp > 1.0f32 {
-            panic!("Train not san");
-        }
-    }
-    for i in 0..test.len() {
-        let tmp = test[i].get_input()[find_max(train[i].get_input())];
-        if tmp > 1.0f32 {
-            panic!("Test not san");
-        }
-    }
-}
-
-// updates the Network with a mini batch of training data
+// Applies Stochastic Gradient Descent over the mini batch.
 fn update_mini_batch(mut nn: &mut Network, mini_batch: &mut [Data], eta: f32) {
     // nabla_b holds changes for biases in the network. Initialise with zeros because
     // the changes will later on be summed up in this vector
@@ -135,12 +108,8 @@ fn backprop(nn: &mut Network,
     }
 
     // feedforward
-    // current activation layer, at the beginning this is the input
-    // Note: Clone here because in later iterations activation will actually hold the
-    // ownership of the Vector (or rather the activations vector will). However this might
-    // still be a performance issue since we call this once per training data.
-//    let mut activation = data.clone();
-    // holds activation levels all for layers (including output)
+
+    // holds activation levels all for layers (including in- and output)
     let mut activations: Vec<DVector<f32>> = Vec::with_capacity(nn.get_layers().len());
     // note that this pushes the input activations
     activations.push(data.clone());
@@ -151,17 +120,14 @@ fn backprop(nn: &mut Network,
     // execute feedforward
     for (biases, weights) in nn.get_biases().iter().zip(nn.get_weights().iter()) {
         // TODO: Remove Clone
-        // verify
         zs.push(weights * &activations[activations.len() - 1] + biases.clone());
-        //activation = nn::sigmoid(&zs[zs.len() - 1]);
         activations.push(nn::sigmoid(&zs[zs.len() - 1]))
     }
-//    debug!("Activation: {:?}", activations[activations.len()-1]);
 
 
     // backward pass
 
-    // calculate values for output layer first (hence backpropagation)
+    // calculate values for output layer
     // delta is a measurement for the error of the last layer's output
     // compared to the desired output, we will derive the nabla values from this
     let mut delta = cost_derivative(&activations[activations.len() - 1], desired_output) *
@@ -180,7 +146,6 @@ fn backprop(nn: &mut Network,
     for l in 2..nn.get_weights().len() + 1 {
         let z = &zs[zs.len() - l];
         let sp = sigmoid_prime(&z);
-        //TODO: Verify that this line does what it's supposed to
         delta = (&nn.get_weights()[nn.get_weights().len() - l + 1].transpose() * &delta) * sp;
         nabla_b[nabla_b_len - l] = delta.clone();
         nabla_w[nabla_w_len - l] = (&delta).outer(&activations[activations.len() - l - 1]);

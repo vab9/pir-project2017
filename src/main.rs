@@ -12,11 +12,11 @@ mod logging;
 
 use input::config;
 use nn::Network;
-use rand::Rng;
 use std::env;
 use std::io;
 use structs::Data;
 use structs::flower::Flower;
+
 
 // number of data sets used for evaluation purposes only
 const TEST_DATA_SIZE: usize = 20;
@@ -33,9 +33,22 @@ fn main() {
     info!("Starting_up...");
     info!("Running with Logging Level: {:?}", config.verbosity);
 
+    // ========================================================
+    // LUKAS THINGS
+    // ========================================================
 
+    // we got the input data from the parse_commands() invocation above
+    let mut input_data = input::into_data_vec(config.data.unwrap());
 
-    // TODO: add cli option to choose a name for the seralized state file
+    // split data into training and test data
+    let (training_data, test_data) = input::util::split_data(&mut input_data, TEST_DATA_SIZE);
+
+    info!("Initialising network...");
+
+    // create the network
+    let mut nn = nn::Network::new(vec![4, 5, 3]).unwrap();
+    // learn!
+    nn::learning::sgd(&mut nn, training_data, 3000, 32, 0.05, test_data);
 
     // ========================================================
     // CODE SHOWING HOW SERIALIZATION WORKS
@@ -55,33 +68,4 @@ fn main() {
 
 fn learn<T>(learn_cfg: &config::LearningConfig, data: Result<Vec<T>, io::Error>) {
     unimplemented!();
-    // // we got the input data from the parse_commands() invocation above
-    // let mut input = data.unwrap();
-
-    // // init RNG
-    // let mut rng = rand::thread_rng();
-    // rng.shuffle(&mut input);
-
-    // // split into training and test data
-    // let mut training_data: Vec<Data> = Vec::with_capacity(input.len() - 30);
-    // for i in 0..input.len() - TEST_DATA_SIZE {
-    //     training_data.push(structs::Data::from_flower(input[i] as Flower));
-    // }
-
-    // let mut test_data: Vec<Data> = Vec::with_capacity(30);
-    // for i in input.len() - TEST_DATA_SIZE..input.len() {
-    //     test_data.push(structs::Data::from_flower(input[i]));
-    // }
-
-    // nn::learning::sanitise(&mut training_data, &mut test_data);
-    // nn::learning::check_san(&training_data, &test_data);
-
-    // info!("Initialising network...");
-
-    // // create the network
-    // let mut nn = nn::Network::new(vec![4, 5, 3]).unwrap();
-    // // learn!
-    // // params needed: epochs, mini_batch_size, learning_rate eta
-    // nn::learning::sgd(&mut nn, training_data, 30000, 32, 0.05, test_data);
-
 }

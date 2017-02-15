@@ -36,9 +36,9 @@ impl Data {
         &self.input
     }
 
-    pub fn get_input_mut(&mut self) -> &mut DVector<f32> {
+    /*pub fn get_input_mut(&mut self) -> &mut DVector<f32> {
         &mut self.input
-    }
+    }*/
 
     /// Get the class_vector
     pub fn get_class_vector(&self) -> &DVector<f32> {

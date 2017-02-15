@@ -12,6 +12,7 @@ use std::iter::FromIterator;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use structs::flower::Flower;
+use structs::{self, Data};
 
 use self::clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 
@@ -112,6 +113,16 @@ pub fn read_data<T>(filename: &Path) -> io::Result<Vec<T>>
     reader.lines().map(|l| l?.parse::<T>()).collect()
 }
 
+// TODO: DOK
+pub fn into_data_vec(input: Vec<Flower>) -> Vec<Data> {
+    let mut input_data = Vec::with_capacity(input.len());
+    for i in 0..input.len() {
+        input_data.push(structs::Data::from_flower(input[i]));
+    }
+    input_data
+}
+
+// TODO: DOK
 fn parse_data<T>(datafile: &str) -> Result<Vec<T>, io::Error>
     where T: FromStr,
           T::Err: convert::From<io::Error>,
