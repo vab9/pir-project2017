@@ -7,12 +7,12 @@ use std::iter::FromIterator;
 use std::str::FromStr;
 
 
-
 /// Represents a configuration from command line arguments
 #[derive(Debug)]
 pub struct GlobalConfig<T> {
     pub verbosity: LogLevelFilter,
     pub data: Result<Vec<T>, io::Error>,
+    pub datatype: String,
     pub learn_config: Option<LearningConfig>,
 }
 
@@ -53,6 +53,7 @@ impl<T> GlobalConfig<T>
         GlobalConfig {
             verbosity: verbosity,
             data: data,
+            datatype: matches.value_of("datatype").unwrap().to_string(),
             learn_config: learn_config,
         }
     }
