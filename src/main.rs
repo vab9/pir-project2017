@@ -54,15 +54,12 @@ fn main() {
         test_data.push(structs::Data::from_flower(input[i]));
     }
 
-    nn::learning::sanitise(&mut training_data, &mut test_data);
-    nn::learning::check_san(&training_data, &test_data);
-
     info!("Initialising network...");
 
     // create the network
     let mut nn = nn::Network::new(vec![4, 5, 3]).unwrap();
     // learn!
-    nn::learning::sgd(&mut nn, training_data, 30000, 32, 0.05, test_data);
+    nn::learning::sgd(&mut nn, training_data, 300, 32, 0.05, test_data);
 
     // ========================================================
     // CODE SHOWING HOW SERIALIZATION WORKS
@@ -77,6 +74,4 @@ fn main() {
     info!("{:?}", loaded_nn);
     info!("=====================================");
     info!("...terminated!");
-
-
 }
