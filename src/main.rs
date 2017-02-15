@@ -25,7 +25,14 @@ const TEST_DATA_SIZE: usize = 20;
 fn main() {
 
     // read command line arguments
-    let config: config::GlobalConfig<Flower> = input::read_arguments();
+    let cfg = input::read_arguments();
+    // let s: String = "flower".to_string();
+    let dtype = cfg.datatype.to_string();
+    let config = match dtype.as_str() {
+        "flower" => cfg as config::GlobalConfig<Flower>,
+        _ => unreachable!(),
+    };
+
 
     // initialize the global logger --> we can use info!(), debug!(), etc. from here on
     logging::init_logger(config.verbosity);
@@ -55,15 +62,10 @@ fn main() {
 
 fn learn(learn_cfg: &config::LearningConfig, mut data: Vec<Data>) {
 
-    // we got the input data from the parse_commands() invocation above
-    //let mut input_data = data.unwrap();
-
     // split data into training and test data
     let (training_data, test_data) = input::util::split_data(&mut data, TEST_DATA_SIZE);
 
     info!("Initialising network...");
-
-    debug!("{:?}", learn_cfg.init_vec);
 
     // create the network
     let mut nn = nn::Network::new(&learn_cfg.init_vec).unwrap();
