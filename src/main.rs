@@ -11,12 +11,7 @@ mod nn;
 mod logging;
 
 use input::config;
-use nn::{learning, Network};
-use std::convert;
 use std::env;
-use std::io;
-use std::iter::FromIterator;
-use std::str::FromStr;
 use structs::Data;
 use structs::flower::Flower;
 
@@ -38,15 +33,19 @@ fn main() {
     info!("Starting_up...");
     info!("Running with Logging Level: {:?}", config.verbosity);
 
+    let flower_data = true;
     // Program logic starts here
     if let Some(learn_cfg) = config.learn_config {
         // learn
         // TODO: sort out Type parameter
         // Lukas, we should make this work together:
         //
-        // learning::learn(&learn_cfg, config.data);
-        // unimplemented!();
-
+        if flower_data {
+            //TODO: remove unwrap
+            learn(&learn_cfg, input::util::into_data_vec(config.data.unwrap()));
+        } else {
+            unimplemented!();
+        }
     } else {
         // classify
         // TODO: implement classify
@@ -54,13 +53,13 @@ fn main() {
     }
 }
 
-fn learn(learn_cfg: &config::LearningConfig, data: Result<Vec<Data>, io::Error>) {
+fn learn(learn_cfg: &config::LearningConfig, mut data: Vec<Data>) {
 
     // we got the input data from the parse_commands() invocation above
-    let mut input_data = data.unwrap();
+    //let mut input_data = data.unwrap();
 
     // split data into training and test data
-    let (training_data, test_data) = input::util::split_data(&mut input_data, TEST_DATA_SIZE);
+    let (training_data, test_data) = input::util::split_data(&mut data, TEST_DATA_SIZE);
 
     info!("Initialising network...");
 

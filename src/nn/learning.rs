@@ -2,13 +2,6 @@ use structs::Data;
 use nn::Network;
 use na::{DVector, DMatrix, Iterable, Transpose};
 
-use std::convert;
-use std::env;
-use std::io;
-use std::iter::FromIterator;
-use std::path::PathBuf;
-use std::str::FromStr;
-
 /// Execute Stochastic Gradient Descent on the `Network`.
 ///
 /// `training_data` is the data actually used for learning and should be disjoint from the
@@ -20,7 +13,6 @@ use std::str::FromStr;
 /// over the mini_batch. Note that this means that the SGD does not actually calculate the gradient
 /// over the whole training data set in each cycle, instead it calculates the gradient over the mini
 /// batches and then sums those up (hence Stochastic Gradient Descent).
-
 pub fn sgd(mut nn: &mut Network,
            mut training_data: Vec<Data>,
            epochs: u32,
