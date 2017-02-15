@@ -45,6 +45,7 @@ impl<T> GlobalConfig<T>
                         .map(|s| s.parse().expect("Unable to parse topology vector!"))
                         .collect()
                 },
+                test_size: matches.value_of("test_data_size").unwrap().parse().unwrap(),
             }
         });
 
@@ -65,4 +66,5 @@ pub struct LearningConfig {
     pub epochs: u32,
     pub batch_size: u8,
     pub init_vec: Vec<u8>,
+    pub test_size: usize,
 }
