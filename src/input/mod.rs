@@ -106,5 +106,5 @@ fn parse_data(datafile: &str) -> Result<Vec<Data>, io::Error> {
     // TODO: could not make this happen generically
     // here you can switch between flower and mnist for now
     // until we find a solution
-    read_data::<Flower>(&path)
+    read_data(&path)
 }

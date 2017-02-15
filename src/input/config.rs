@@ -43,7 +43,14 @@ impl GlobalConfig {
         });
 
         let dtype = matches.value_of("datatype").unwrap();
-        let data = input::parse_data(matches.value_of("data").unwrap());
+
+        let data = match dtype {
+            "flower" => input::parse_data(matches.value_of("data").unwrap()),
+            "mnist" => input::parse_data(matches.value_of("data").unwrap()),
+            _ => unreachable!(),
+        };
+
+        // let data = input::parse_data(matches.value_of("data").unwrap());
 
         GlobalConfig {
             verbosity: verbosity,
