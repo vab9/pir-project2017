@@ -13,9 +13,7 @@ mod logging;
 
 use input::parse_commands;
 use nn::Network;
-use rand::Rng;
 use std::env;
-use structs::Data;
 
 // number of data sets used for evaluation purposes only
 const TEST_DATA_SIZE: usize = 20;
@@ -34,32 +32,22 @@ fn main() {
     info!("Running with Logging Level: {:?}", verbosity);
 
     // we got the input data from the parse_commands() invocation above
-    let mut input = data.unwrap();
+    let mut input_data = input::into_data_vec(data.unwrap());
 
     info!("config: {:?}", config);
     info!("subcommand: {:?}", subcom);
 
-    // init RNG
-    let mut rng = rand::thread_rng();
-    rng.shuffle(&mut input);
 
-    // split into training and test data
-    let mut training_data: Vec<Data> = Vec::with_capacity(input.len() - 30);
-    for i in 0..input.len() - TEST_DATA_SIZE {
-        training_data.push(structs::Data::from_flower(input[i]));
-    }
+    // split data into training and test data
 
-    let mut test_data: Vec<Data> = Vec::with_capacity(30);
-    for i in input.len() - TEST_DATA_SIZE..input.len() {
-        test_data.push(structs::Data::from_flower(input[i]));
-    }
+    let (training_data, test_data) = input::util::split_data(&mut input_data, TEST_DATA_SIZE);
 
     info!("Initialising network...");
 
     // create the network
     let mut nn = nn::Network::new(vec![4, 5, 3]).unwrap();
     // learn!
-    nn::learning::sgd(&mut nn, training_data, 300, 32, 0.05, test_data);
+    nn::learning::sgd(&mut nn, training_data, 3000, 32, 0.05, test_data);
 
     // ========================================================
     // CODE SHOWING HOW SERIALIZATION WORKS

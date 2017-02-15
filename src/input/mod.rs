@@ -8,6 +8,7 @@ use std::fs::File;
 use std::io::{self, BufReader, BufRead};
 use std::path::{Path, PathBuf};
 use structs::flower::Flower;
+use structs::{self, Data};
 
 use self::clap::{App, AppSettings, Arg, SubCommand};
 
@@ -64,6 +65,14 @@ pub fn parse_commands
      matches.value_of("config").unwrap().parse().unwrap(),
      matches.subcommand_name().unwrap().to_string(),
      verbosity)
+}
+
+pub fn into_data_vec(input: Vec<Flower>) -> Vec<Data> {
+    let mut input_data = Vec::with_capacity(input.len());
+    for i in 0..input.len() {
+        input_data.push(structs::Data::from_flower(input[i]));
+    }
+    input_data
 }
 
 fn parse_data(datafile: &str) -> Result<Vec<Flower>, io::Error> {
