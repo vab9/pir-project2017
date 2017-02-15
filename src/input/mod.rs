@@ -4,20 +4,28 @@ extern crate clap;
 
 use env;
 use log::LogLevelFilter;
+use std::convert;
 use std::fs::File;
 use std::io::{self, BufReader, BufRead};
+use std::iter::FromIterator;
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 use structs::flower::Flower;
 
-use self::clap::{App, AppSettings, Arg, SubCommand};
+use self::clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 
 
 /// reads content of given file and returns a result with
 /// either the Vector of Flowers or Err
-pub fn read_data(filename: &Path) -> io::Result<Vec<Flower>> {
+pub fn read_data<T>(filename: &Path) -> io::Result<Vec<T>>
+    where T: FromStr,
+          T::Err: convert::From<io::Error>,
+          Result<Vec<T>, T::Err>: FromIterator<Result<T, io::Error>>,
+          Result<Vec<T>, io::Error>: FromIterator<Result<T, T::Err>>
+{
     let f = File::open(filename)?;
     let reader = BufReader::new(&f);
-    reader.lines().map(|l| l?.parse::<Flower>()).collect()
+    reader.lines().map(|l| l?.parse::<T>()).collect()
 }
 
 /// parses commands for the programm and returns a tuple of strings
@@ -26,7 +34,22 @@ pub fn parse_commands
     -> (Result<Vec<Flower>, io::Error>, String, String, Option<LogLevelFilter>)
 {
     let matches = App::new("rustle my net")
-        .subcommand(SubCommand::with_name("learn"))
+        .subcommand(SubCommand::with_name("learn")
+            .arg(Arg::with_name("learning_rate")
+                .long("eta")
+                .takes_value(true)
+                .help("The learning rate eta. Should be between 0.0 and 1.0")
+                .default_value("0.05"))
+            .arg(Arg::with_name("epochs")
+                .long("epochs")
+                .takes_value(true)
+                .help("The number of training epochs")
+                .default_value("100"))
+            .arg(Arg::with_name("mini_batch_size")
+                .long("batchsize")
+                .takes_value(true)
+                .help("The size of the mini batches for the learning process.")
+                .default_value("32")))
         .subcommand(SubCommand::with_name("classify"))
         .setting(AppSettings::SubcommandRequiredElseHelp)
         .arg(Arg::with_name("verbosity")
@@ -41,11 +64,10 @@ pub fn parse_commands
             .short("d")
             .takes_value(true)
             .default_value("data/iris_flowers.txt"))
-        .arg(Arg::with_name("config")
-            .long("config")
-            .short("c")
-            .takes_value(true)
-            .default_value("data/config.json"))
+        .arg(Arg::with_name("network_model")
+            .long("model")
+            .short("m")
+            .takes_value(true))
         .get_matches();
 
     let verbosity = match matches.value_of("verbosity") {
@@ -59,14 +81,41 @@ pub fn parse_commands
     // TODO: remove unwrap
     let data = parse_data(matches.value_of("data").unwrap());
 
+    // TODO: return the ArgMatches Object to main
+    // then call another function from main that does the actual execution
+    // do_awesome_stuff(matches.clone());
+
     // TODO: return a struct or a hashmap or something more elegant instead of a tuple
     (data,
-     matches.value_of("config").unwrap().parse().unwrap(),
+     "data/config.json".to_string(),
      matches.subcommand_name().unwrap().to_string(),
      verbosity)
 }
 
-fn parse_data(datafile: &str) -> Result<Vec<Flower>, io::Error> {
+// TODO: put this function somewhere else. Perhaps in main.rs?!
+fn do_awesome_stuff(matches: ArgMatches) {
+    // let data = ...
+    match matches.subcommand_name() {
+        Some("learn") => {
+            unimplemented!();
+            // let learn_params = ...
+            // learn(data, learn_params);
+        }
+        Some("classify") => {
+            unimplemented!();
+            // classify(data)
+        }
+        None => unreachable!(),
+        _ => unreachable!(),
+    }
+}
+
+fn parse_data<T>(datafile: &str) -> Result<Vec<T>, io::Error>
+    where T: FromStr,
+          T::Err: convert::From<io::Error>,
+          Result<Vec<T>, T::Err>: FromIterator<Result<T, io::Error>>,
+          Result<Vec<T>, io::Error>: FromIterator<Result<T, T::Err>>
+{
     let mut data_path = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
     data_path.push(Path::new(datafile));
     read_data(&data_path)

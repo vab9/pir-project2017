@@ -24,7 +24,7 @@ const TEST_DATA_SIZE: usize = 20;
 fn main() {
 
     // parses commands
-    let (data, config, subcom, verbosity) = parse_commands();
+    let (data, _, subcom, verbosity) = parse_commands();
 
     if let Some(verbosity) = verbosity {
         logging::init_logger(verbosity);
@@ -36,7 +36,6 @@ fn main() {
     // we got the input data from the parse_commands() invocation above
     let mut input = data.unwrap();
 
-    info!("config: {:?}", config);
     info!("subcommand: {:?}", subcom);
 
     // init RNG
@@ -62,6 +61,7 @@ fn main() {
     // create the network
     let mut nn = nn::Network::new(vec![4, 5, 3]).unwrap();
     // learn!
+    // params needed: epochs, mini_batch_size, learning_rate eta
     nn::learning::sgd(&mut nn, training_data, 30000, 32, 0.05, test_data);
 
     // ========================================================
