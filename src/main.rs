@@ -18,7 +18,7 @@ use std::env;
 use structs::Data;
 
 // number of data sets used for evaluation purposes only
-const TEST_DATA_SIZE: usize = 30;
+const TEST_DATA_SIZE: usize = 20;
 
 
 fn main() {
@@ -57,9 +57,9 @@ fn main() {
     info!("Initialising network...");
 
     // create the network
-    let mut nn = nn::Network::new(vec![4, 30, 3]).unwrap();
+    let mut nn = nn::Network::new(vec![4, 5, 3]).unwrap();
     // learn!
-    nn::learning::sgd(&mut nn, training_data, 100, 70, 0.15, test_data);
+    nn::learning::sgd(&mut nn, training_data, 300, 32, 0.05, test_data);
 
     // ========================================================
     // CODE SHOWING HOW SERIALIZATION WORKS
@@ -74,6 +74,4 @@ fn main() {
     info!("{:?}", loaded_nn);
     info!("=====================================");
     info!("...terminated!");
-
-
 }
