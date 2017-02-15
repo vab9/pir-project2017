@@ -147,7 +147,7 @@ impl Network {
 pub fn sigmoid(arr: &DVector<f32>) -> DVector<f32> {
     let mut sig = arr.clone();
     for elem in sig.iter_mut() {
-        *elem = 1.0 / (1.0 + (elem).exp());
+        *elem = 1.0 / (1.0 + (-1.0f32 * elem.clone()).exp());
     }
     sig
 }

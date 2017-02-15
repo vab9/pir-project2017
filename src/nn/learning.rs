@@ -7,7 +7,7 @@ use na::{DVector, DMatrix, Iterable, Transpose};
 /// be no validation. `Eta` is the learning rate.
 pub fn sgd(mut nn: &mut Network,
            mut training_data: Vec<Data>,
-           epochs: u16,
+           epochs: u32,
            mini_batch_size: u8,
            eta: f32,
            test_data: Vec<Data>) {
@@ -15,6 +15,7 @@ pub fn sgd(mut nn: &mut Network,
     let mut rng = rand::thread_rng();
     for j in 0..epochs {
         rng.shuffle(&mut training_data);
+        // Verify
         for mut mini_batch in training_data.chunks_mut(mini_batch_size as usize) {
             // all the learning happens there:
             update_mini_batch(&mut nn, &mut mini_batch, eta);
@@ -30,6 +31,48 @@ pub fn sgd(mut nn: &mut Network,
     }
 }
 
+
+pub fn sanitise(train: &mut Vec<Data>, test: &mut Vec<Data>) {
+    let mut max = 0.0f32;
+    for i in 0..train.len() {
+        let tmp = train[i].get_input()[find_max(train[i].get_input())];
+        if tmp > max {
+            max = tmp;
+        }
+    }
+    for i in 0..test.len() {
+        let tmp = test[i].get_input()[find_max(train[i].get_input())];
+        if tmp > max {
+            max = tmp;
+        }
+    }
+    for i in 0..train.len(){
+        *train[i].get_input_mut() *= 1.0/max;
+    }
+
+    for i in 0..test.len() {
+        *test[i].get_input_mut() *= 1.0/max;
+    }
+
+
+
+}
+
+pub fn check_san(train: &Vec<Data>, test: &Vec<Data>) {
+    for i in 0..train.len() {
+        let tmp = train[i].get_input()[find_max(train[i].get_input())];
+        if tmp > 1.0f32 {
+            panic!("Train not san");
+        }
+    }
+    for i in 0..test.len() {
+        let tmp = test[i].get_input()[find_max(train[i].get_input())];
+        if tmp > 1.0f32 {
+            panic!("Test not san");
+        }
+    }
+}
+
 // updates the Network with a mini batch of training data
 fn update_mini_batch(mut nn: &mut Network, mini_batch: &mut [Data], eta: f32) {
     // nabla_b holds changes for biases in the network. Initialise with zeros because
@@ -41,6 +84,7 @@ fn update_mini_batch(mut nn: &mut Network, mini_batch: &mut [Data], eta: f32) {
     // holds changes for weights in the network, similar to biases
     let mut nabla_w: Vec<DMatrix<f32>> = Vec::with_capacity(nn.get_weights().len());
     for weights in nn.get_weights() {
+        // verify: rows, columns
         nabla_w.push(DMatrix::new_zeros(weights.nrows(), weights.ncols()));
     }
 
@@ -63,7 +107,7 @@ fn update_mini_batch(mut nn: &mut Network, mini_batch: &mut [Data], eta: f32) {
 
     // Update the actual weights and biases
     for (mut w, nw) in nn.get_weights_mut().iter_mut().zip(nabla_w.iter()) {
-        *w -= eta / (mini_batch_len as f32) * nw.clone();
+        *w -= (eta / (mini_batch_len as f32)) * nw.clone();
     }
 
     for (mut b, nb) in nn.get_biases_mut().iter_mut().zip(nabla_b.iter()) {
@@ -95,23 +139,25 @@ fn backprop(nn: &mut Network,
     // Note: Clone here because in later iterations activation will actually hold the
     // ownership of the Vector (or rather the activations vector will). However this might
     // still be a performance issue since we call this once per training data.
-    let mut activation = data.clone();
-
+//    let mut activation = data.clone();
     // holds activation levels all for layers (including output)
     let mut activations: Vec<DVector<f32>> = Vec::with_capacity(nn.get_layers().len());
+    // note that this pushes the input activations
+    activations.push(data.clone());
+
     // hold z for each layer where z is the input vector of the sigmoid function
     let mut zs: Vec<DVector<f32>> = Vec::with_capacity(nn.get_layers().len());
 
-    // note that this pushes the input activations
-    activations.push(activation);
     // execute feedforward
     for (biases, weights) in nn.get_biases().iter().zip(nn.get_weights().iter()) {
         // TODO: Remove Clone
-        let z = weights * &activations[activations.len() - 1] + biases.clone();
-        zs.push(z);
-        activation = nn::sigmoid(&zs[zs.len() - 1]);
-        activations.push(activation)
+        // verify
+        zs.push(weights * &activations[activations.len() - 1] + biases.clone());
+        //activation = nn::sigmoid(&zs[zs.len() - 1]);
+        activations.push(nn::sigmoid(&zs[zs.len() - 1]))
     }
+//    debug!("Activation: {:?}", activations[activations.len()-1]);
+
 
     // backward pass
 
@@ -125,7 +171,7 @@ fn backprop(nn: &mut Network,
     let nabla_w_len = nabla_w.len();
     // TODO: Remove clone
     nabla_b[nabla_b_len - 1] = delta.clone();
-    nabla_w[nabla_w_len - 1] = (&nabla_b[nabla_b_len - 1])
+    nabla_w[nabla_w_len - 1] = (&delta)
         .outer(&activations[activations.len() - 2]);
 
     // now calculate the values for all previous layers going from second to last to first layer
@@ -135,7 +181,7 @@ fn backprop(nn: &mut Network,
         let z = &zs[zs.len() - l];
         let sp = sigmoid_prime(&z);
         //TODO: Verify that this line does what it's supposed to
-        delta = &nn.get_weights()[nn.get_weights().len() - l + 1].transpose() * &delta * sp;
+        delta = (&nn.get_weights()[nn.get_weights().len() - l + 1].transpose() * &delta) * sp;
         nabla_b[nabla_b_len - l] = delta.clone();
         nabla_w[nabla_w_len - l] = (&delta).outer(&activations[activations.len() - l - 1]);
     }
