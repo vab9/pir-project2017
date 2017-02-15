@@ -1,27 +1,20 @@
 use input;
 use input::clap::ArgMatches;
 use log::LogLevelFilter;
-use std::convert;
 use std::io;
-use std::iter::FromIterator;
-use std::str::FromStr;
+use structs::Data;
 
 
 /// Represents a configuration from command line arguments
 #[derive(Debug)]
-pub struct GlobalConfig<T> {
+pub struct GlobalConfig {
     pub verbosity: LogLevelFilter,
-    pub data: Result<Vec<T>, io::Error>,
+    pub data: Result<Vec<Data>, io::Error>,
     pub datatype: String,
     pub learn_config: Option<LearningConfig>,
 }
 
-impl<T> GlobalConfig<T>
-    where T: FromStr,
-          T::Err: convert::From<io::Error>,
-          Result<Vec<T>, T::Err>: FromIterator<Result<T, io::Error>>,
-          Result<Vec<T>, io::Error>: FromIterator<Result<T, T::Err>>
-{
+impl GlobalConfig {
     pub fn from_arguments<'a>(matches: ArgMatches) -> Self {
         let verbosity = match matches.value_of("verbosity") {
             Some("debug") => LogLevelFilter::Debug,
@@ -49,12 +42,13 @@ impl<T> GlobalConfig<T>
             }
         });
 
+        let dtype = matches.value_of("datatype").unwrap();
         let data = input::parse_data(matches.value_of("data").unwrap());
 
         GlobalConfig {
             verbosity: verbosity,
             data: data,
-            datatype: matches.value_of("datatype").unwrap().to_string(),
+            datatype: dtype.to_string(),
             learn_config: learn_config,
         }
     }

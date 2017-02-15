@@ -11,28 +11,17 @@ mod nn;
 mod logging;
 
 use input::config;
-use std::env;
 use structs::Data;
-use structs::flower::Flower;
-
-
-
 
 // number of data sets used for evaluation purposes only
 const TEST_DATA_SIZE: usize = 20;
 
 
+
 fn main() {
 
     // read command line arguments
-    let cfg = input::read_arguments();
-    // let s: String = "flower".to_string();
-    let dtype = cfg.datatype.to_string();
-    let config = match dtype.as_str() {
-        "flower" => cfg as config::GlobalConfig<Flower>,
-        _ => unreachable!(),
-    };
-
+    let config: config::GlobalConfig = input::read_arguments();
 
     // initialize the global logger --> we can use info!(), debug!(), etc. from here on
     logging::init_logger(config.verbosity);
@@ -40,19 +29,16 @@ fn main() {
     info!("Starting_up...");
     info!("Running with Logging Level: {:?}", config.verbosity);
 
-    let flower_data = true;
     // Program logic starts here
     if let Some(learn_cfg) = config.learn_config {
+
         // learn
         // TODO: sort out Type parameter
         // Lukas, we should make this work together:
         //
-        if flower_data {
-            //TODO: remove unwrap
-            learn(&learn_cfg, input::util::into_data_vec(config.data.unwrap()));
-        } else {
-            unimplemented!();
-        }
+        learn(&learn_cfg,
+              input::util::generic_to_data(config.data.unwrap()));
+
     } else {
         // classify
         // TODO: implement classify

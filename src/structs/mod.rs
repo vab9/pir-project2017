@@ -7,15 +7,15 @@ use std::io;
 use structs::flower::{Flower, FlowerName};
 use structs::mnist::Mnist;
 
+
 /// Struct for u8
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Data {
     /// Input Vector for the input layer of the NN
     input: DVector<f32>,
     /// actual class vector of the for the NN (Result)
     class_vector: DVector<f32>,
 }
-
 
 impl Data {
     /// Generates a new Data struct with a Vector and an u8(class)
@@ -28,25 +28,10 @@ impl Data {
         }
     }
 
-    /// Generates a new Data struct from a Flower type
-    pub fn from_flower(flower: Flower) -> Data {
-        Data::new(DVector::from(flower), flower.name.classify(), 3)
-    }
-
-    pub fn from_mnist(mnist: Mnist) -> Data {
-        Data::new(DVector::from_slice(784, mnist.get_slice()),
-                  mnist.get_class(),
-                  10)
-    }
-
     /// getter for the Input
     pub fn get_input(&self) -> &DVector<f32> {
         &self.input
     }
-
-    /*pub fn get_input_mut(&mut self) -> &mut DVector<f32> {
-        &mut self.input
-    }*/
 
     /// Get the class_vector
     pub fn get_class_vector(&self) -> &DVector<f32> {
@@ -54,6 +39,19 @@ impl Data {
     }
 }
 
+impl From<Flower> for Data {
+    fn from(flower: Flower) -> Data {
+        Data::new(DVector::from(flower), flower.name.classify(), 3)
+    }
+}
+
+impl From<Mnist> for Data {
+    fn from(mnist: Mnist) -> Data {
+        Data::new(DVector::from_slice(784, mnist.get_slice()),
+                  mnist.get_class(),
+                  10)
+    }
+}
 
 /// Trait used to classify or declassify
 pub trait Classifier {

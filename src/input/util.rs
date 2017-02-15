@@ -1,7 +1,6 @@
 use std::env;
 use std::path::PathBuf;
 use structs::Data;
-use structs::flower::Flower;
 
 pub fn get_root_dir() -> PathBuf {
     // TODO: remove expect here
@@ -35,13 +34,10 @@ pub fn split_data(mut input: &mut Vec<Data>, test_data_size: usize) -> (Vec<Data
     (training_data, test_data)
 }
 
-
-// TODO: DOK
-pub fn into_data_vec(input: Vec<Flower>) -> Vec<Data> {
-    use structs;
+pub fn generic_to_data<T: Into<Data> + Clone>(input: Vec<T>) -> Vec<Data> {
     let mut input_data = Vec::with_capacity(input.len());
     for i in 0..input.len() {
-        input_data.push(structs::Data::from_flower(input[i]));
+        input_data.push(input[i].clone().into());
     }
     input_data
 }

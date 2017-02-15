@@ -3,24 +3,20 @@ pub mod util;
 
 extern crate clap;
 
-use env;
 use std::convert;
 use std::fs::File;
+use std::fmt::Debug;
 use std::io::{self, BufReader, BufRead};
 use std::iter::FromIterator;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::str::FromStr;
+use structs::Data;
 
 use self::clap::{App, AppSettings, Arg, SubCommand};
 
 
 /// Reads the arguments given to this program at execution and returns them
-pub fn read_arguments<T>() -> config::GlobalConfig<T>
-    where T: FromStr,
-          T::Err: convert::From<io::Error>,
-          Result<Vec<T>, T::Err>: FromIterator<Result<T, io::Error>>,
-          Result<Vec<T>, io::Error>: FromIterator<Result<T, T::Err>>
-{
+pub fn read_arguments() -> config::GlobalConfig {
     let matches = App::new("rustle my net")
         .subcommand(SubCommand::with_name("learn")
             .arg(Arg::with_name("topology")
@@ -79,30 +75,36 @@ pub fn read_arguments<T>() -> config::GlobalConfig<T>
     config::GlobalConfig::from_arguments(matches)
 }
 
-
 /// reads content of given file and returns a result with
 /// either the Vector of Flowers or Err
-pub fn read_data<T>(filename: &Path) -> io::Result<Vec<T>>
-    where T: FromStr,
-          T::Err: convert::From<io::Error>,
+pub fn read_data<T>(filename: &Path) -> Result<Vec<Data>, io::Error>
+    where T: FromStr + Into<Data> + Debug + ?Sized,
+          T::Err: convert::From<io::Error> + Debug,
           Result<Vec<T>, T::Err>: FromIterator<Result<T, io::Error>>,
           Result<Vec<T>, io::Error>: FromIterator<Result<T, T::Err>>
 {
+
     let f = File::open(filename)?;
     let reader = BufReader::new(&f);
-    reader.lines().map(|l| l?.parse::<T>()).collect()
+
+    // original function -- leave this
+    // reader.lines().map(|l| l?.parse::<T>()).collect()
+
+    // TODO: rm unwrapping
+    let v: Vec<Data> = reader.lines()
+        .map(|l| l.unwrap().parse::<T>().unwrap().into())
+        .collect();
+    Ok(v)
 }
 
 
-
-// TODO: DOK
-fn parse_data<T>(datafile: &str) -> Result<Vec<T>, io::Error>
-    where T: FromStr,
-          T::Err: convert::From<io::Error>,
-          Result<Vec<T>, T::Err>: FromIterator<Result<T, io::Error>>,
-          Result<Vec<T>, io::Error>: FromIterator<Result<T, T::Err>>
-{
-    let mut data_path = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
-    data_path.push(Path::new(datafile));
-    read_data(&data_path)
+// TODO: DOKU
+fn parse_data(datafile: &str) -> Result<Vec<Data>, io::Error> {
+    use structs::flower::Flower;
+    let mut path = self::util::get_root_dir();
+    path.push(Path::new(datafile));
+    // TODO: could not make this happen generically
+    // here you can switch between flower and mnist for now
+    // until we find a solution
+    read_data::<Flower>(&path)
 }
