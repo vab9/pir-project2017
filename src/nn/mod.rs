@@ -47,7 +47,7 @@ pub struct Network {
 
 impl Network {
     /// build a new Network with a topology Vector
-    pub fn new(sizes: Vec<u8>) -> Result<Network, &'static str> {
+    pub fn new(sizes: &[u8]) -> Result<Network, &'static str> {
         assert!(sizes.len() >= 3, "at least three layers required");
 
         // Store the weights and biases in lists
@@ -73,7 +73,7 @@ impl Network {
         }
 
         Ok(Network {
-            layers: sizes,
+            layers: sizes.to_vec(),
             weights: weights,
             biases: biases,
         })

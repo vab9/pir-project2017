@@ -63,8 +63,15 @@ fn learn(learn_cfg: &config::LearningConfig, mut data: Vec<Data>) {
 
     info!("Initialising network...");
 
+    debug!("{:?}", learn_cfg.init_vec);
+
     // create the network
-    let mut nn = nn::Network::new(vec![4, 5, 3]).unwrap();
+    let mut nn = nn::Network::new(&learn_cfg.init_vec).unwrap();
     // learn!
-    nn::learning::sgd(&mut nn, training_data, 3000, 32, 0.05, test_data);
+    nn::learning::sgd(&mut nn,
+                      training_data,
+                      learn_cfg.epochs,
+                      learn_cfg.batch_size,
+                      learn_cfg.learning_rate,
+                      test_data);
 }

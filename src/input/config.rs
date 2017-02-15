@@ -39,11 +39,11 @@ impl<T> GlobalConfig<T>
                 epochs: matches.value_of("epochs").unwrap().parse().unwrap(),
                 batch_size: matches.value_of("mini_batch_size").unwrap().parse().unwrap(),
                 init_vec: {
-                    matches.value_of("topology")
+                    matches.values_of("topology")
                         .unwrap()
-                        .split_whitespace()
                         .map(|s| s.parse().expect("Unable to parse topology vector!"))
                         .collect()
+
                 },
                 test_size: matches.value_of("test_data_size").unwrap().parse().unwrap(),
             }
