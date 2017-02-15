@@ -109,6 +109,14 @@ impl Network {
     }
 
     /// Saves a network state to the given filename and returns a result
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let mut nn = nn::Network::new(vec![4, 5, 3]).unwrap();
+    /// let state_file_name = "state1.json";
+    /// nn.save_to_file(state_file_name).unwrap();
+    /// ```
     pub fn save_to_file(self, filename: &str) -> Result<(), serde_json::Error> {
         // wrap it in a SerializableNet
         let serializable_net: SerializableNet = self.into();
@@ -124,6 +132,12 @@ impl Network {
     ///
     /// Returns a result with the file or an io::Error if the specified file could
     /// not be opened
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let loaded_nn = Network::from_file("state1.json");
+    /// ```
     pub fn from_file(filename: &str) -> Result<Self, io::Error> {
         // attempt to open the file
         let f = File::open(util::get_root_dir().join("data/").join(filename))?;

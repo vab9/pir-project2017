@@ -2,6 +2,7 @@ use std::env;
 use std::path::PathBuf;
 use structs::Data;
 
+
 pub fn get_root_dir() -> PathBuf {
     // TODO: remove expect here
     if let Ok(path) = env::var("CARGO_MANIFEST_DIR") {
@@ -28,7 +29,7 @@ pub fn split_data(mut input: &mut Vec<Data>, test_data_size: usize) -> (Vec<Data
     }
 
     let mut test_data: Vec<Data> = Vec::with_capacity(test_data_size);
-    for i in input.len()-test_data_size..input.len() {
+    for i in input.len() - test_data_size..input.len() {
         test_data.push(input[i].clone());
     }
     (training_data, test_data)

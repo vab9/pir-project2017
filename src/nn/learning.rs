@@ -2,6 +2,12 @@ use structs::Data;
 use nn::Network;
 use na::{DVector, DMatrix, Iterable, Transpose};
 
+use std::convert;
+use std::env;
+use std::io;
+use std::iter::FromIterator;
+use std::path::PathBuf;
+use std::str::FromStr;
 
 /// Execute Stochastic Gradient Descent on the `Network`.
 ///
@@ -137,8 +143,7 @@ fn backprop(nn: &mut Network,
     let nabla_w_len = nabla_w.len();
     // TODO: Remove clone
     nabla_b[nabla_b_len - 1] = delta.clone();
-    nabla_w[nabla_w_len - 1] = (&delta)
-        .outer(&activations[activations.len() - 2]);
+    nabla_w[nabla_w_len - 1] = (&delta).outer(&activations[activations.len() - 2]);
 
     // now calculate the values for all previous layers going from second to last to first layer
     // note: get_weiths is used for measurement of number of layers with biases and weights to

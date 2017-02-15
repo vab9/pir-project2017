@@ -11,11 +11,16 @@ mod nn;
 mod logging;
 
 use input::config;
-use nn::Network;
+use nn::{learning, Network};
+use std::convert;
 use std::env;
 use std::io;
+use std::iter::FromIterator;
+use std::str::FromStr;
 use structs::Data;
 use structs::flower::Flower;
+
+
 
 
 // number of data sets used for evaluation purposes only
@@ -33,12 +38,26 @@ fn main() {
     info!("Starting_up...");
     info!("Running with Logging Level: {:?}", config.verbosity);
 
-    // ========================================================
-    // LUKAS THINGS
-    // ========================================================
+    // Program logic starts here
+    if let Some(learn_cfg) = config.learn_config {
+        // learn
+        // TODO: sort out Type parameter
+        // Lukas, we should make this work together:
+        //
+        // learning::learn(&learn_cfg, config.data);
+        // unimplemented!();
+
+    } else {
+        // classify
+        // TODO: implement classify
+        unimplemented!();
+    }
+}
+
+fn learn(learn_cfg: &config::LearningConfig, data: Result<Vec<Data>, io::Error>) {
 
     // we got the input data from the parse_commands() invocation above
-    let mut input_data = input::into_data_vec(config.data.unwrap());
+    let mut input_data = data.unwrap();
 
     // split data into training and test data
     let (training_data, test_data) = input::util::split_data(&mut input_data, TEST_DATA_SIZE);
@@ -49,23 +68,4 @@ fn main() {
     let mut nn = nn::Network::new(vec![4, 5, 3]).unwrap();
     // learn!
     nn::learning::sgd(&mut nn, training_data, 3000, 32, 0.05, test_data);
-
-    // ========================================================
-    // CODE SHOWING HOW SERIALIZATION WORKS
-    // ========================================================
-    let mut nn = nn::Network::new(vec![4, 5, 3]).unwrap();
-    let state_file_name = "state1.json";
-    nn.save_to_file(state_file_name).unwrap();
-    info!("Saved a neural network state to file: {}", state_file_name);
-    info!("=====================================");
-
-    let loaded_nn = Network::from_file("state1.json");
-    info!("Loaded Neural Network from file: {}", state_file_name);
-    info!("{:?}", loaded_nn);
-    info!("=====================================");
-    info!("...terminated!");
-}
-
-fn learn<T>(learn_cfg: &config::LearningConfig, data: Result<Vec<T>, io::Error>) {
-    unimplemented!();
 }
