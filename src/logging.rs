@@ -10,6 +10,7 @@ use std::path::{Path, PathBuf};
 
 const MAX_LOG_FILES: usize = 10;
 
+
 /// Initializes a global logger that logs to its own file for each run
 ///
 /// It can be used with the macros in the log crate. The resulting log files can

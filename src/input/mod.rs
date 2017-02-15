@@ -1,3 +1,4 @@
+pub mod config;
 pub mod util;
 
 extern crate clap;
@@ -15,23 +16,12 @@ use structs::flower::Flower;
 use self::clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 
 
-/// reads content of given file and returns a result with
-/// either the Vector of Flowers or Err
-pub fn read_data<T>(filename: &Path) -> io::Result<Vec<T>>
+/// Reads the arguments given to this program at execution and returns them
+pub fn read_arguments<T>() -> config::GlobalConfig<T>
     where T: FromStr,
           T::Err: convert::From<io::Error>,
           Result<Vec<T>, T::Err>: FromIterator<Result<T, io::Error>>,
           Result<Vec<T>, io::Error>: FromIterator<Result<T, T::Err>>
-{
-    let f = File::open(filename)?;
-    let reader = BufReader::new(&f);
-    reader.lines().map(|l| l?.parse::<T>()).collect()
-}
-
-/// parses commands for the programm and returns a tuple of strings
-pub fn parse_commands
-    ()
-    -> (Result<Vec<Flower>, io::Error>, String, String, Option<LogLevelFilter>)
 {
     let matches = App::new("rustle my net")
         .subcommand(SubCommand::with_name("learn")
@@ -70,6 +60,12 @@ pub fn parse_commands
             .takes_value(true))
         .get_matches();
 
+    config::GlobalConfig::from_arguments(matches)
+}
+
+// TODO: ueberbrueckungsmethode
+fn do_lame_stuff(matches: ArgMatches)
+                 -> (Result<Vec<Flower>, io::Error>, String, String, Option<LogLevelFilter>) {
     let verbosity = match matches.value_of("verbosity") {
         Some("debug") => Some(LogLevelFilter::Debug),
         Some("info") => Some(LogLevelFilter::Info),
@@ -77,15 +73,8 @@ pub fn parse_commands
         Some("off") => Some(LogLevelFilter::Off),
         _ => None,
     };
-
-    // TODO: remove unwrap
     let data = parse_data(matches.value_of("data").unwrap());
 
-    // TODO: return the ArgMatches Object to main
-    // then call another function from main that does the actual execution
-    // do_awesome_stuff(matches.clone());
-
-    // TODO: return a struct or a hashmap or something more elegant instead of a tuple
     (data,
      "data/config.json".to_string(),
      matches.subcommand_name().unwrap().to_string(),
@@ -108,6 +97,19 @@ fn do_awesome_stuff(matches: ArgMatches) {
         None => unreachable!(),
         _ => unreachable!(),
     }
+}
+
+/// reads content of given file and returns a result with
+/// either the Vector of Flowers or Err
+pub fn read_data<T>(filename: &Path) -> io::Result<Vec<T>>
+    where T: FromStr,
+          T::Err: convert::From<io::Error>,
+          Result<Vec<T>, T::Err>: FromIterator<Result<T, io::Error>>,
+          Result<Vec<T>, io::Error>: FromIterator<Result<T, T::Err>>
+{
+    let f = File::open(filename)?;
+    let reader = BufReader::new(&f);
+    reader.lines().map(|l| l?.parse::<T>()).collect()
 }
 
 fn parse_data<T>(datafile: &str) -> Result<Vec<T>, io::Error>
