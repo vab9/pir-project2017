@@ -29,6 +29,7 @@ pub fn read_arguments<T>() -> config::GlobalConfig<T>
                 // TODO: proper help
                 .help("a list of values representing the number of nodes in each layer")
                 .multiple(true)
+                .value_delimiter(" ")
                 .required(true))
             .arg(Arg::with_name("learning_rate")
                 .long("eta")
