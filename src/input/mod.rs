@@ -26,6 +26,13 @@ pub fn read_arguments<T>() -> config::GlobalConfig<T>
 {
     let matches = App::new("rustle my net")
         .subcommand(SubCommand::with_name("learn")
+            .arg(Arg::with_name("topology")
+                .long("topology")
+                .short("t")
+                // TODO: proper help
+                .help("a list of values representing the number of nodes in each layer")
+                .multiple(true)
+                .required(true))
             .arg(Arg::with_name("learning_rate")
                 .long("eta")
                 .takes_value(true)

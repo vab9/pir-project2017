@@ -38,6 +38,13 @@ impl<T> GlobalConfig<T>
                 learning_rate: matches.value_of("learning_rate").unwrap().parse().unwrap(),
                 epochs: matches.value_of("epochs").unwrap().parse().unwrap(),
                 batch_size: matches.value_of("mini_batch_size").unwrap().parse().unwrap(),
+                init_vec: {
+                    matches.value_of("topology")
+                        .unwrap()
+                        .split_whitespace()
+                        .map(|s| s.parse().expect("Unable to parse topology vector!"))
+                        .collect()
+                },
             }
         });
 
@@ -51,9 +58,10 @@ impl<T> GlobalConfig<T>
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct LearningConfig {
     pub learning_rate: f32,
     pub epochs: u32,
     pub batch_size: u8,
+    pub init_vec: Vec<u8>,
 }
