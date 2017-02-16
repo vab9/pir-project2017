@@ -131,7 +131,6 @@ impl Network {
         serde_json::to_writer(&mut writer, &serializable_net)
     }
 
-    // TODO: remove allow dead_code
 
     /// Loads a network state from the given file
     ///
@@ -143,7 +142,6 @@ impl Network {
     /// ```
     /// let loaded_nn = Network::from_file("state1.json");
     /// ```
-    #[allow(dead_code)]
     pub fn from_file(filename: &str) -> Result<Self, io::Error> {
         // attempt to open the file
         let f = File::open(util::get_root_dir().join("data/").join(filename))?;
