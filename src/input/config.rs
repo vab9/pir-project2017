@@ -24,6 +24,7 @@ pub struct GlobalConfig {
 impl GlobalConfig {
     /// Parse the given `ArgMatches` into a `GlobalConfig`
     pub fn from_arguments<'a>(matches: ArgMatches) -> Self {
+        // get verbosity level or set highest in case of failure
         let verbosity = match matches.value_of("verbosity") {
             Some("debug") => LogLevelFilter::Debug,
             Some("info") => LogLevelFilter::Info,
@@ -35,8 +36,7 @@ impl GlobalConfig {
 
         let s_file = matches.value_of("save_file").unwrap();
 
-        // TODO: Should we double down on error handling by providing defaults with
-        // with unwrap_or() instaed of unwrap() ?
+        // create the learning configuration
         let learn_config = matches.subcommand_matches("learn").map(|sub_matches| {
             LearningConfig {
                 learning_rate: sub_matches.value_of("learning_rate").unwrap().parse().unwrap(),
@@ -55,7 +55,8 @@ impl GlobalConfig {
         });
 
         // determine which dataset to use
-        // TODO: unwraps
+        // if we add other datasets here, we also need to implement a Datatype for it
+        // and add it to the possible values in clap (input::read_arguments())
         let data = match matches.value_of("datatype").unwrap() {
             "flower" => input::parse_data::<Flower>(matches.value_of("data").unwrap()),
             "mnist" => input::parse_data::<Mnist>(matches.value_of("data").unwrap()),

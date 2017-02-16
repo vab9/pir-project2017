@@ -3,8 +3,7 @@ pub mod serialnet;
 pub mod mnist;
 
 use na::DVector;
-use std::io;
-use structs::flower::{Flower, FlowerName};
+use structs::flower::Flower;
 use structs::mnist::Mnist;
 
 
@@ -56,7 +55,4 @@ impl From<Mnist> for Data {
 /// Trait used to classify or declassify
 pub trait Classifier {
     fn classify(&self) -> u8;
-    // TODO: mega unsinnig dieses Trait, solange der return type ein Result<Flower...> ist
-    // perhaps use generics?!
-    fn declassify(num: u8) -> Result<FlowerName, io::Error>;
 }

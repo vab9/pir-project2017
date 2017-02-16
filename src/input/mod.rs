@@ -94,10 +94,9 @@ fn parse_data<T>(datafile: &str) -> Result<Vec<Data>, io::Error>
     let f = File::open(path)?;
     let reader = BufReader::new(&f);
 
-    // TODO: rm unwrapping + trait bounds
-    let v: Vec<Data> = reader.lines()
+    // read lines, map string to type T, convert T to Data, collect into a vec, return as Result
+    Ok(reader.lines()
         .map(|l| l.unwrap().parse::<T>().unwrap().into())
-        .collect();
-    Ok(v)
+        .collect())
 
 }

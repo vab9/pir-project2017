@@ -92,14 +92,4 @@ impl Classifier for FlowerName {
             FlowerName::IrisVirginica => 2,
         }
     }
-
-    /// declassify an u8 into an FlowerName
-    fn declassify(num: u8) -> Result<FlowerName, io::Error> {
-        match num {
-            0 => Ok(FlowerName::IrisSetosa),
-            1 => Ok(FlowerName::IrisVersicolor),
-            2 => Ok(FlowerName::IrisVirginica),
-            _ => Err(io::Error::new(io::ErrorKind::InvalidInput, "Not a valid flower class")),
-        }
-    }
 }

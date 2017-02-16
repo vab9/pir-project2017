@@ -7,7 +7,6 @@ use structs::Data;
 /// Will try to find the Cargo Root Directory, if that fails it will use the directory
 /// from where the program was called.
 pub fn get_root_dir() -> PathBuf {
-    // TODO: remove expect here
     if let Ok(path) = env::var("CARGO_MANIFEST_DIR") {
         info!("Using $CARGO_MANIFEST_DIR as root directory.");
         PathBuf::from(path)
