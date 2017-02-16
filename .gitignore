@@ -6,4 +6,5 @@ logs/*
 *.sublime-*
 data/config.json
 data/*.json
+data/*.ser
 

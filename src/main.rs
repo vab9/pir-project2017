@@ -9,14 +9,10 @@ mod input;
 mod structs;
 mod nn;
 mod logging;
+mod model;
 
 use input::config;
-use structs::Data;
-
-// number of data sets used for evaluation purposes only
-const TEST_DATA_SIZE: usize = 20;
-
-
+use input::util::generic_to_data;
 
 fn main() {
 
@@ -30,36 +26,10 @@ fn main() {
     info!("Running with Logging Level: {:?}", config.verbosity);
 
     // Program logic starts here
+    let data = generic_to_data(config.data.unwrap());
     if let Some(learn_cfg) = config.learn_config {
-
-        // learn
-        // TODO: sort out Type parameter
-        // Lukas, we should make this work together:
-        //
-        learn(&learn_cfg,
-              input::util::generic_to_data(config.data.unwrap()));
-
+        model::train(&learn_cfg, data);
     } else {
-        // classify
-        // TODO: implement classify
-        unimplemented!();
+        model::classify(&config.save_file, data);
     }
-}
-
-fn learn(learn_cfg: &config::LearningConfig, mut data: Vec<Data>) {
-
-    // split data into training and test data
-    let (training_data, test_data) = input::util::split_data(&mut data, TEST_DATA_SIZE);
-
-    info!("Initialising network...");
-
-    // create the network
-    let mut nn = nn::Network::new(&learn_cfg.init_vec).unwrap();
-    // learn!
-    nn::learning::sgd(&mut nn,
-                      training_data,
-                      learn_cfg.epochs,
-                      learn_cfg.batch_size,
-                      learn_cfg.learning_rate,
-                      test_data);
 }

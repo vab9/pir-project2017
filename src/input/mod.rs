@@ -14,6 +14,7 @@ use structs::Data;
 
 use self::clap::{App, AppSettings, Arg, SubCommand};
 
+const DEFAULT_SAVE_FILE: &'static str = "model_state.ser";
 
 /// Reads the arguments given to this program at execution and returns them
 pub fn read_arguments() -> config::GlobalConfig {
@@ -26,7 +27,8 @@ pub fn read_arguments() -> config::GlobalConfig {
                 .help("a list of values representing the number of nodes in each layer")
                 .multiple(true)
                 .value_delimiter(" ")
-                .required(true))
+                .required(true)
+                .min_values(3))
             .arg(Arg::with_name("learning_rate")
                 .long("eta")
                 .takes_value(true)
@@ -70,41 +72,34 @@ pub fn read_arguments() -> config::GlobalConfig {
             .takes_value(true)
             .possible_values(&["flower", "mnist"])
             .default_value("flower"))
+        .arg(Arg::with_name("save_file")
+            .long("file")
+            .short("f")
+            .takes_value(true)
+            .default_value(DEFAULT_SAVE_FILE))
         .get_matches();
 
     config::GlobalConfig::from_arguments(matches)
 }
 
-/// reads content of given file and returns a result with
-/// either the Vector of Flowers or Err
-pub fn read_data<T>(filename: &Path) -> Result<Vec<Data>, io::Error>
-    where T: FromStr + Into<Data> + Debug + ?Sized,
+
+/// Generically parse data from given input file into a Vec<Data>
+fn parse_data<T>(datafile: &str) -> Result<Vec<Data>, io::Error>
+    where T: FromStr + Into<Data>,
           T::Err: convert::From<io::Error> + Debug,
           Result<Vec<T>, T::Err>: FromIterator<Result<T, io::Error>>,
           Result<Vec<T>, io::Error>: FromIterator<Result<T, T::Err>>
 {
+    let mut path = self::util::get_root_dir();
+    path.push(Path::new(datafile));
 
-    let f = File::open(filename)?;
+    let f = File::open(path)?;
     let reader = BufReader::new(&f);
 
-    // original function -- leave this
-    // reader.lines().map(|l| l?.parse::<T>()).collect()
-
-    // TODO: rm unwrapping
+    // TODO: rm unwrapping + trait bounds
     let v: Vec<Data> = reader.lines()
         .map(|l| l.unwrap().parse::<T>().unwrap().into())
         .collect();
     Ok(v)
-}
 
-
-// TODO: DOKU
-fn parse_data(datafile: &str) -> Result<Vec<Data>, io::Error> {
-    use structs::flower::Flower;
-    let mut path = self::util::get_root_dir();
-    path.push(Path::new(datafile));
-    // TODO: could not make this happen generically
-    // here you can switch between flower and mnist for now
-    // until we find a solution
-    read_data(&path)
 }
