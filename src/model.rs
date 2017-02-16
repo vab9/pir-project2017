@@ -28,9 +28,18 @@ pub fn train(learn_cfg: &config::LearningConfig, mut data: Vec<Data>) {
     info!("...terminated!");
 }
 
-// TODO: implement this!
-#[allow(dead_code, unused_variables, unused_mut)]
-pub fn classify(save_file: &str, mut data: Vec<Data>) {
-    let nn = nn::Network::from_file(save_file);
-    unimplemented!();
+/// Will load a neural network located at `save_file` and input `data` into the network.
+/// The number of correctly classified items in `data` will be printed on the info log.
+///
+/// If no network is located at `save_file` or there is an error on initialising it from file
+/// an error will be logged.
+pub fn classify(save_file: &str, data: &Vec<Data>) {
+    let nn = match nn::Network::from_file(save_file) {
+        Err(msg) => {
+            error!("Error when trying to open network file at given location: {}", msg);
+            return;
+        },
+        Ok(nn) => nn,
+    };
+    nn::learning::evaluate_with_output(&nn, &data);
 }

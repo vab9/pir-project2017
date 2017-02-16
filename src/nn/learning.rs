@@ -167,6 +167,14 @@ fn sigmoid_prime(z: &DVector<f32>) -> DVector<f32> {
     nn::sigmoid(z) * (1.0f32 - nn::sigmoid(z))
 }
 
+/// Print in info log how many samples of `test_data` were correctly classified by `nn`
+pub fn evaluate_with_output(nn: &Network, test_data: &Vec<Data>) {
+    info!("{}/{} correctly classified",
+           evaluate(&nn, &test_data),
+           test_data.len());
+}
+
+
 // compares the output of the Network with the test_data
 // returns the number of correct results
 fn evaluate(nn: &Network, test_data: &Vec<Data>) -> u8 {

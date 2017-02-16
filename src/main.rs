@@ -30,6 +30,6 @@ fn main() {
     if let Some(learn_cfg) = config.learn_config {
         model::train(&learn_cfg, data);
     } else {
-        model::classify(&config.save_file, data);
+        model::classify(&config.save_file, &data);
     }
 }
