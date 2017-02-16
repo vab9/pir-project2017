@@ -108,7 +108,6 @@ impl Network {
         &self.biases
     }
 
-    // TODO: remove allow dead_code
 
     /// Saves a network state to the given filename and returns a result
     ///
@@ -119,7 +118,6 @@ impl Network {
     /// let state_file_name = "state1.json";
     /// nn.save_to_file(state_file_name).unwrap();
     /// ```
-    #[allow(dead_code)]
     pub fn save_to_file(self, filename: &str) -> Result<(), serde_json::Error> {
         // wrap it in a SerializableNet
         let serializable_net: SerializableNet = self.into();
