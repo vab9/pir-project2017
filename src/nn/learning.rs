@@ -2,7 +2,6 @@ use structs::Data;
 use nn::Network;
 use na::{DVector, DMatrix, Iterable, Transpose};
 
-
 /// Execute Stochastic Gradient Descent on the `Network`.
 ///
 /// `training_data` is the data actually used for learning and should be disjoint from the
@@ -14,7 +13,6 @@ use na::{DVector, DMatrix, Iterable, Transpose};
 /// over the mini_batch. Note that this means that the SGD does not actually calculate the gradient
 /// over the whole training data set in each cycle, instead it calculates the gradient over the mini
 /// batches and then sums those up (hence Stochastic Gradient Descent).
-
 pub fn sgd(mut nn: &mut Network,
            mut training_data: Vec<Data>,
            epochs: u32,
@@ -137,8 +135,7 @@ fn backprop(nn: &mut Network,
     let nabla_w_len = nabla_w.len();
     // TODO: Remove clone
     nabla_b[nabla_b_len - 1] = delta.clone();
-    nabla_w[nabla_w_len - 1] = (&delta)
-        .outer(&activations[activations.len() - 2]);
+    nabla_w[nabla_w_len - 1] = (&delta).outer(&activations[activations.len() - 2]);
 
     // now calculate the values for all previous layers going from second to last to first layer
     // note: get_weiths is used for measurement of number of layers with biases and weights to

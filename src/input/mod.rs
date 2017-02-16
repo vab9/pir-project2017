@@ -1,32 +1,53 @@
+pub mod config;
 pub mod util;
 
 extern crate clap;
 
-use env;
-use log::LogLevelFilter;
+use std::convert;
 use std::fs::File;
+use std::fmt::Debug;
 use std::io::{self, BufReader, BufRead};
-use std::path::{Path, PathBuf};
-use structs::flower::Flower;
+use std::iter::FromIterator;
+use std::path::Path;
+use std::str::FromStr;
+use structs::Data;
 
 use self::clap::{App, AppSettings, Arg, SubCommand};
 
+const DEFAULT_SAVE_FILE: &'static str = "model_state.ser";
 
-/// reads content of given file and returns a result with
-/// either the Vector of Flowers or Err
-pub fn read_data(filename: &Path) -> io::Result<Vec<Flower>> {
-    let f = File::open(filename)?;
-    let reader = BufReader::new(&f);
-    reader.lines().map(|l| l?.parse::<Flower>()).collect()
-}
-
-/// parses commands for the programm and returns a tuple of strings
-pub fn parse_commands
-    ()
-    -> (Result<Vec<Flower>, io::Error>, String, String, Option<LogLevelFilter>)
-{
+/// Reads the arguments given to this program at execution and returns them
+pub fn read_arguments() -> config::GlobalConfig {
     let matches = App::new("rustle my net")
-        .subcommand(SubCommand::with_name("learn"))
+        .subcommand(SubCommand::with_name("learn")
+            .arg(Arg::with_name("topology")
+                .long("topology")
+                .short("t")
+                // TODO: proper help
+                .help("a list of values representing the number of nodes in each layer")
+                .multiple(true)
+                .value_delimiter(" ")
+                .required(true)
+                .min_values(3))
+            .arg(Arg::with_name("learning_rate")
+                .long("eta")
+                .takes_value(true)
+                .help("The learning rate eta. Should be between 0.0 and 1.0")
+                .default_value("0.05"))
+            .arg(Arg::with_name("epochs")
+                .long("epochs")
+                .takes_value(true)
+                .help("The number of training epochs")
+                .default_value("100"))
+            .arg(Arg::with_name("mini_batch_size")
+                .long("batchsize")
+                .takes_value(true)
+                .help("The size of the mini batches for the learning process.")
+                .default_value("32"))
+            .arg(Arg::with_name("test_data_size")
+                .long("testsize")
+                .takes_value(true)
+                .default_value("20")))
         .subcommand(SubCommand::with_name("classify"))
         .setting(AppSettings::SubcommandRequiredElseHelp)
         .arg(Arg::with_name("verbosity")
@@ -38,36 +59,47 @@ pub fn parse_commands
             .default_value("debug"))
         .arg(Arg::with_name("data")
             .long("data")
-            .short("d")
+            .short("i")
             .takes_value(true)
             .default_value("data/iris_flowers.txt"))
-        .arg(Arg::with_name("config")
-            .long("config")
-            .short("c")
+        .arg(Arg::with_name("network_model")
+            .long("model")
+            .short("m")
+            .takes_value(true))
+        .arg(Arg::with_name("datatype")
+            .long("type")
+            .short("d")
             .takes_value(true)
-            .default_value("data/config.json"))
+            .possible_values(&["flower", "mnist"])
+            .default_value("flower"))
+        .arg(Arg::with_name("save_file")
+            .long("file")
+            .short("f")
+            .takes_value(true)
+            .default_value(DEFAULT_SAVE_FILE))
         .get_matches();
 
-    let verbosity = match matches.value_of("verbosity") {
-        Some("debug") => Some(LogLevelFilter::Debug),
-        Some("info") => Some(LogLevelFilter::Info),
-        Some("error") => Some(LogLevelFilter::Error),
-        Some("off") => Some(LogLevelFilter::Off),
-        _ => None,
-    };
-
-    // TODO: remove unwrap
-    let data = parse_data(matches.value_of("data").unwrap());
-
-    // TODO: return a struct or a hashmap or something more elegant instead of a tuple
-    (data,
-     matches.value_of("config").unwrap().parse().unwrap(),
-     matches.subcommand_name().unwrap().to_string(),
-     verbosity)
+    config::GlobalConfig::from_arguments(matches)
 }
 
-fn parse_data(datafile: &str) -> Result<Vec<Flower>, io::Error> {
-    let mut data_path = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
-    data_path.push(Path::new(datafile));
-    read_data(&data_path)
+
+/// Generically parse data from given input file into a Vec<Data>
+fn parse_data<T>(datafile: &str) -> Result<Vec<Data>, io::Error>
+    where T: FromStr + Into<Data>,
+          T::Err: convert::From<io::Error> + Debug,
+          Result<Vec<T>, T::Err>: FromIterator<Result<T, io::Error>>,
+          Result<Vec<T>, io::Error>: FromIterator<Result<T, T::Err>>
+{
+    let mut path = self::util::get_root_dir();
+    path.push(Path::new(datafile));
+
+    let f = File::open(path)?;
+    let reader = BufReader::new(&f);
+
+    // TODO: rm unwrapping + trait bounds
+    let v: Vec<Data> = reader.lines()
+        .map(|l| l.unwrap().parse::<T>().unwrap().into())
+        .collect();
+    Ok(v)
+
 }

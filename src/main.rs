@@ -9,69 +9,27 @@ mod input;
 mod structs;
 mod nn;
 mod logging;
+mod model;
 
-
-use input::parse_commands;
-use nn::Network;
-use rand::Rng;
-use std::env;
-use structs::Data;
-
-// number of data sets used for evaluation purposes only
-const TEST_DATA_SIZE: usize = 20;
-
+use input::config;
+use input::util::generic_to_data;
 
 fn main() {
 
-    // parses commands
-    let (data, config, subcom, verbosity) = parse_commands();
+    // read command line arguments
+    let config: config::GlobalConfig = input::read_arguments();
 
-    if let Some(verbosity) = verbosity {
-        logging::init_logger(verbosity);
-    }
+    // initialize the global logger --> we can use info!(), debug!(), etc. from here on
+    logging::init_logger(config.verbosity);
 
     info!("Starting_up...");
-    info!("Running with Logging Level: {:?}", verbosity);
+    info!("Running with Logging Level: {:?}", config.verbosity);
 
-    // we got the input data from the parse_commands() invocation above
-    let mut input = data.unwrap();
-
-    info!("config: {:?}", config);
-    info!("subcommand: {:?}", subcom);
-
-    // init RNG
-    let mut rng = rand::thread_rng();
-    rng.shuffle(&mut input);
-
-    // split into training and test data
-    let mut training_data: Vec<Data> = Vec::with_capacity(input.len() - 30);
-    for i in 0..input.len() - TEST_DATA_SIZE {
-        training_data.push(structs::Data::from_flower(input[i]));
+    // Program logic starts here
+    let data = generic_to_data(config.data.unwrap());
+    if let Some(learn_cfg) = config.learn_config {
+        model::train(&learn_cfg, data);
+    } else {
+        model::classify(&config.save_file, data);
     }
-
-    let mut test_data: Vec<Data> = Vec::with_capacity(30);
-    for i in input.len() - TEST_DATA_SIZE..input.len() {
-        test_data.push(structs::Data::from_flower(input[i]));
-    }
-
-    info!("Initialising network...");
-
-    // create the network
-    let mut nn = nn::Network::new(vec![4, 5, 3]).unwrap();
-    // learn!
-    nn::learning::sgd(&mut nn, training_data, 300, 32, 0.05, test_data);
-
-    // ========================================================
-    // CODE SHOWING HOW SERIALIZATION WORKS
-    // ========================================================
-    let state_file_name = "state1.json";
-    nn.save_to_file(state_file_name).unwrap();
-    info!("Saved a neural network state to file: {}", state_file_name);
-    info!("=====================================");
-
-    let loaded_nn = Network::from_file("state1.json");
-    info!("Loaded Neural Network from file: {}", state_file_name);
-    info!("{:?}", loaded_nn);
-    info!("=====================================");
-    info!("...terminated!");
 }
