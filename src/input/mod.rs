@@ -24,7 +24,7 @@ pub fn read_arguments() -> config::GlobalConfig {
                 .long("topology")
                 .short("t")
                 // TODO: proper help
-                .help("a list of values representing the number of nodes in each layer")
+                .help("a list of values representing the number of neurons in each layer")
                 .multiple(true)
                 .value_delimiter(" ")
                 .required(true)

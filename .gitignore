@@ -2,9 +2,8 @@ target
 Cargo.lock
 *~
 *#
-logs/*
+logs
 *.sublime-*
 data/config.json
 data/*.json
 data/*.ser
-

@@ -10,13 +10,19 @@ use structs::mnist::Mnist;
 /// Represents a configuration from command line arguments
 #[derive(Debug)]
 pub struct GlobalConfig {
+    /// Holds level of verbosity for output (`Debug`, `Info`, `Error` or `Off`)
     pub verbosity: LogLevelFilter,
+    /// Path to where saved network object is located,
+    /// will currently default to "model_state.ser" if not specified
     pub save_file: String,
+    /// The actual data that the network will use to learn / classify
     pub data: Result<Vec<Data>, io::Error>,
+    /// Hyperparameters for network learning
     pub learn_config: Option<LearningConfig>,
 }
 
 impl GlobalConfig {
+    /// Parse the given `ArgMatches` into a `GlobalConfig`
     pub fn from_arguments<'a>(matches: ArgMatches) -> Self {
         let verbosity = match matches.value_of("verbosity") {
             Some("debug") => LogLevelFilter::Debug,
@@ -65,12 +71,33 @@ impl GlobalConfig {
     }
 }
 
+/// The hyperparameters used for nn-learning.
+///
+/// These will be set manually and influence the behaviour, speed and success of the
+/// learning progress. They depend on your training data set layout and the problem you are trying
+/// to solve. Some settings might result in very good behaviour, some in the network getting more
+/// stupid in each learning epoch. Have fun figuring them out :P
 #[derive(Debug, Clone)]
 pub struct LearningConfig {
+    /// Influences speed and success of the learning progress. High values increase speed, too high
+    /// values will result in the network not being able to learn. In most cases covered in this NN
+    /// the value should be <1.
     pub learning_rate: f32,
+    /// Number of learning epochs. Higher values yield better results by increasing
+    /// total training time. Setting this too high might result in
+    /// overfitting on your training data.
     pub epochs: u32,
+    /// Size of minibatches that stochastic gradient descent will be applied on. Too big samples
+    /// will result in slower networks, too small samples will result in bad gradients and thus
+    /// badly influence learning success. In all examples covered by this net the size was ~10.
     pub batch_size: u8,
+    /// Network topology: holds number of neurons in each layer (including in- and output layer).
+    /// Example: [4, 5, 3] will result in a network with 4 input neurons, 5 neurons in a hidden
+    /// layer, and three output neurons.
     pub init_vec: Vec<u8>,
+    /// Number of samples to use for testing. Larger number of samples (especially when you don't
+    /// have many samples in total) will decrease learning success.
     pub test_size: usize,
+    /// Path to where the nn is to be loaded from
     pub save_file: String,
 }
