@@ -37,7 +37,7 @@ pub struct Network {
     /// the first entry corresponds to the inputlayer,
     /// the intermediate entries correspond to the hidden layers
     /// and the last entry corresponds to the outputlayer.
-    layers: Vec<u8>,
+    layers: Vec<u32>,
     /// a Vec that contains the weights of the respective layer
     weights: Vec<DMatrix<f32>>,
     /// a Vec cointaining the biases of the respective layer
@@ -47,7 +47,7 @@ pub struct Network {
 
 impl Network {
     /// build a new Network with a topology Vector
-    pub fn new(sizes: &[u8]) -> Result<Network, &'static str> {
+    pub fn new(sizes: &[u32]) -> Result<Network, &'static str> {
         assert!(sizes.len() >= 3, "at least three layers required");
 
         // Store the weights and biases in lists
@@ -89,7 +89,7 @@ impl Network {
     }
 
     /// return the layers used to initialize the ANN
-    pub fn get_layers(&self) -> &[u8] {
+    pub fn get_layers(&self) -> &[u32] {
         &self.layers
     }
 

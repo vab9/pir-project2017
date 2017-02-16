@@ -36,9 +36,10 @@ pub fn train(learn_cfg: &config::LearningConfig, mut data: Vec<Data>) {
 pub fn classify(save_file: &str, data: &Vec<Data>) {
     let nn = match nn::Network::from_file(save_file) {
         Err(msg) => {
-            error!("Error when trying to open network file at given location: {}", msg);
+            error!("Error when trying to open network file at given location: {}",
+                   msg);
             return;
-        },
+        }
         Ok(nn) => nn,
     };
     nn::learning::evaluate_with_output(&nn, &data);

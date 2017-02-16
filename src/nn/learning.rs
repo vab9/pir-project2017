@@ -16,7 +16,7 @@ use na::{DVector, DMatrix, Iterable, Transpose};
 pub fn sgd(mut nn: &mut Network,
            mut training_data: Vec<Data>,
            epochs: u32,
-           mini_batch_size: u8,
+           mini_batch_size: u32,
            eta: f32,
            test_data: Vec<Data>) {
     use rand::{self, Rng};
@@ -155,7 +155,7 @@ fn cost_derivative(output_activations: &DVector<f32>,
                    desired_output: &DVector<f32>)
                    -> DVector<f32> {
     // easy, derivative of quadratic cost function is:
-    //TODO: Get rid of clone
+    // TODO: Get rid of clone
     output_activations.clone() - desired_output.clone()
 }
 
@@ -170,14 +170,14 @@ fn sigmoid_prime(z: &DVector<f32>) -> DVector<f32> {
 /// Print in info log how many samples of `test_data` were correctly classified by `nn`
 pub fn evaluate_with_output(nn: &Network, test_data: &Vec<Data>) {
     info!("{}/{} correctly classified",
-           evaluate(&nn, &test_data),
-           test_data.len());
+          evaluate(&nn, &test_data),
+          test_data.len());
 }
 
 
 // compares the output of the Network with the test_data
 // returns the number of correct results
-fn evaluate(nn: &Network, test_data: &Vec<Data>) -> u8 {
+fn evaluate(nn: &Network, test_data: &Vec<Data>) -> u32 {
     // corr holds number of correctly recognised training data sets
     let mut corr = 0;
     // iterate over test data input vectors and test data class vectors
@@ -185,7 +185,7 @@ fn evaluate(nn: &Network, test_data: &Vec<Data>) -> u8 {
         .map(|x| x.get_input())
         .zip(test_data.iter()
             .map(|x| x.get_class_vector())) {
-        //TODO: Shitty performance yo
+        // TODO: Shitty performance yo
         if find_max(&nn.feedforward(x)) == find_max(&y) {
             corr += 1;
         }

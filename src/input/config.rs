@@ -90,11 +90,11 @@ pub struct LearningConfig {
     /// Size of minibatches that stochastic gradient descent will be applied on. Too big samples
     /// will result in slower networks, too small samples will result in bad gradients and thus
     /// badly influence learning success. In all examples covered by this net the size was ~10.
-    pub batch_size: u8,
+    pub batch_size: u32,
     /// Network topology: holds number of neurons in each layer (including in- and output layer).
     /// Example: [4, 5, 3] will result in a network with 4 input neurons, 5 neurons in a hidden
     /// layer, and three output neurons.
-    pub init_vec: Vec<u8>,
+    pub init_vec: Vec<u32>,
     /// Number of samples to use for testing. Larger number of samples (especially when you don't
     /// have many samples in total) will decrease learning success.
     pub test_size: usize,

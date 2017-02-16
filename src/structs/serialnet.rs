@@ -4,7 +4,7 @@ use nn::Network;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SerializableNet {
     /// a Vec hat contains the networks layers
-    pub layers: Vec<u8>,
+    pub layers: Vec<u32>,
     /// a Vec that contains the weights of the respective layer
     /// (nrows, ncols, column-major-vector)
     pub weights: Vec<(usize, usize, Vec<f32>)>,
