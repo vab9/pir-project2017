@@ -56,6 +56,7 @@ impl FromStr for Flower {
 }
 
 impl fmt::Display for Flower {
+    /// just output for the Flower type
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f,
                "({:?}, {}, {}, {}, {})",
@@ -68,6 +69,7 @@ impl fmt::Display for Flower {
 }
 
 impl From<Flower> for DVector<f32> {
+    /// converts flower into a DVector
     fn from(fl: Flower) -> DVector<f32> {
 
         DVector::from_slice(4,

@@ -94,6 +94,7 @@ fn clean_logs() -> Result<usize, io::Error> {
     Ok(excess_files)
 }
 
+/// returns the log directory
 fn get_log_dir() -> PathBuf {
     let mut p = util::get_root_dir();
     p.push(Path::new("logs/"));
