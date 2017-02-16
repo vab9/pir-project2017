@@ -3,7 +3,6 @@ use input::clap::ArgMatches;
 use log::LogLevelFilter;
 use std::io;
 use structs::Data;
-
 use structs::flower::Flower;
 use structs::mnist::Mnist;
 

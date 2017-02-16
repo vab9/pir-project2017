@@ -26,12 +26,10 @@ impl Data {
             class_vector: class_v,
         }
     }
-
     /// getter for the Input
     pub fn get_input(&self) -> &DVector<f32> {
         &self.input
     }
-
     /// Get the class_vector
     pub fn get_class_vector(&self) -> &DVector<f32> {
         &self.class_vector
@@ -39,12 +37,14 @@ impl Data {
 }
 
 impl From<Flower> for Data {
+    /// parses a Flower into a Data struct
     fn from(flower: Flower) -> Data {
         Data::new(DVector::from(flower), flower.name.classify(), 3)
     }
 }
 
 impl From<Mnist> for Data {
+    /// parses a Mnist into a Data struct
     fn from(mnist: Mnist) -> Data {
         Data::new(DVector::from_slice(784, mnist.get_slice()),
                   mnist.get_class(),

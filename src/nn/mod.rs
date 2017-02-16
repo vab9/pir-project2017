@@ -46,18 +46,30 @@ pub struct Network {
 
 
 impl Network {
-    /// build a new Network with a topology Vector
+    /// build a new Network with a given topology
+    ///
+    /// The `sizes` array specifies the size of each layer. For example,
+    /// the array `[4, 5, 3]` will result in a network with 4 input layer
+    /// neurons, 5 neurons in the hidden layer and 3 neurons in the output layer.
     pub fn new(sizes: &[u32]) -> Result<Network, &'static str> {
-        assert!(sizes.len() >= 3, "at least three layers required");
+        // At least one input and one output layer is needed for the code to work
+        if sizes.len() < 2 {
+            return Err("at least three layers required");
+        }
 
         // Store the weights and biases in lists
         // We will not need weights or biases for input layer, so ignore that (hence -1)
         let mut weights = Vec::with_capacity(sizes.len() - 1);
         let mut biases = Vec::with_capacity(sizes.len() - 1);
 
+        // will be needed to initialise weights and biases
         let mut rng = rand::thread_rng();
 
-        // we use the standard normal distribution to initialize weights and biases - why?
+        // Biases and weights will be initialised randomly from a standard normal destribution.
+        // Choosing them so that they are around 0 and very likely between -4 and 4 will speed up
+        // learning because the sigmoid neurons will not as easily get saturated and saturated
+        // neurons cause a slower learning progress.
+        // Skip one because we need one weight matrix less than we have layers
         for (i, layer) in sizes.iter().enumerate().skip(1) {
             // initialize weight matrices
             weights.push(DMatrix::from_fn(*layer as usize, sizes[i - 1] as usize, |_, _| {
@@ -108,6 +120,11 @@ impl Network {
         &self.biases
     }
 
+    /// return a vector of the bias matrices of the ANN
+    pub fn get_biases_mut(&mut self) -> &mut Vec<DVector<f32>> {
+        &mut self.biases
+    }
+
 
     /// Saves a network state to the given filename and returns a result
     ///
@@ -151,11 +168,6 @@ impl Network {
             .expect("Could not parse Network from File");
         // convert into a Network and return it
         Ok(my_net.into())
-    }
-
-    /// return a vector of the bias matrices of the ANN
-    pub fn get_biases_mut(&mut self) -> &mut Vec<DVector<f32>> {
-        &mut self.biases
     }
 }
 

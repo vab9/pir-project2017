@@ -3,9 +3,9 @@ use input::util;
 use nn;
 use structs::Data;
 
-/// Train a neural network model
+/// Prepare data, construct the neural network and call training methods.
+/// After training has run the network state will be saved.
 pub fn train(learn_cfg: &config::LearningConfig, mut data: Vec<Data>) {
-
     // split data into training and test data
     let (training_data, test_data) = util::split_data(&mut data, learn_cfg.test_size);
 
@@ -13,6 +13,8 @@ pub fn train(learn_cfg: &config::LearningConfig, mut data: Vec<Data>) {
 
     // create the network
     let mut nn = nn::Network::new(&learn_cfg.init_vec).unwrap();
+
+    info!("Starting learning...");
     // learn!
     nn::learning::sgd(&mut nn,
                       training_data,
@@ -21,6 +23,8 @@ pub fn train(learn_cfg: &config::LearningConfig, mut data: Vec<Data>) {
                       learn_cfg.learning_rate,
                       test_data);
 
+    // save network state
+    info!("Saving network...");
     nn.save_to_file(&learn_cfg.save_file).unwrap_or_else(|e| {
         error!("Could not save network state to file: {}", e);
     });
